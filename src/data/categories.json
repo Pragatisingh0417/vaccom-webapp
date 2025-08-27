@@ -1,0 +1,58 @@
+[
+  {
+    "id": "1",
+    "name": "Corded Vacuums",
+    "slug": "corded vacuums"
+  },
+  {
+    "id": "2",
+    "name": "Cordless Vacuums",
+    "slug": "cordless-vacuums"
+  },
+  {
+    "id": "3",
+    "name": "Robots",
+    "slug": "robots"
+  },
+  {
+    "id": "4",
+    "name": "Carpet Washers",
+    "slug": "carpet-washers"
+  },
+  {
+    "id": "5",
+    "name": "Hard Floor Cleaners",
+    "slug": "hard-floor-cleaners"
+  },
+  {
+    "id": "6",
+    "name": "Steamers",
+    "slug": "steamers"
+  },
+  {
+    "id": "7",
+    "name": "Commercial",
+    "slug": "commercial"
+  },
+  {
+    "id": "8",
+    "name": "Cleaning Chemicals",
+    "slug": "cleaning-chemicals"
+  },
+  {
+    "id": "9",
+    "name": "Accessories & Parts",
+    "slug": "accessories-parts"
+  },
+  {
+    "id": "10",
+    "name": "Vacuum Bags & Filters",
+    "slug": "vacuum-bags-filters"
+  },
+  {
+    "id": "782f2633-55d5-416f-bf0c-be43748b8018",
+    "name": "abc",
+    "slug": "abc",
+    "imageUrl": "blob:http://localhost:3000/469f76ee-aed1-4c3d-9fd5-edf9a010606c"
+  }
+]

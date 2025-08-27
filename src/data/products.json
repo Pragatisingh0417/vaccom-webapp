@@ -1,0 +1,117 @@
+[
+  {
+    "id": "7f47e647-3df7-4cb5-93b2-407dbb9ece3e",
+    "name": "Bissell Pet Hair Eraser Upright Vacuum Cleaner",
+    "price": 399,
+    "description": "At BISSELL, we know pets can make a mess at any moment – that’s why we created the Pet Hair Eraser™ Turbo Vacuum. Powerful pet hair pickup in a lightweight and agile design.",
+    "brand": "Bissell",
+    "category": "Bissell",
+    "imageUrl": "/uploads/1755163846172.jpg",
+    "slug": "bissell-pet-hair-eraser-upright-vacuum-cleaner",
+    "longdescription": "At BISSELL, we know pets can make a mess at any moment – that’s why we created the Pet Hair Eraser™ Turbo Vacuum. Powerful pet hair pickup in a lightweight and agile design.  The Pet Hair Eraser® Turbo Vacuum Cleaner comes with powerful pickup packed into a lightweight and agile machine for easy and convenient everyday cleanup.  Enjoy the Quick Release Extension Wand which is always on and always ready to tackle those tricky, hard-to-reach pet messes around the home.  Plus, with features like the Tangle-Free Brush Roll and a Hands-Free Empty Dirt Tank, you don’t have to worry about cleaning your vacuum after you’ve cleaned your home.  You can also breathe easy with the Smart Seal® Allergen System that traps dirt and allergens and eliminates odors so you can enjoy a fresher, cleaner home."
+  },
+  {
+    "id": "c06ec39e-903f-463e-b8a1-a2ef1e95fbd5",
+    "name": "BLACK+DECKER 18V Cordless Pivot dustbuster®",
+    "price": 345,
+    "description": "BLACK+DECKER 18V Cordless Pivot dustbuster®",
+    "brand": "Black & Decker",
+    "category": "Black & Decker",
+    "imageUrl": "/uploads/1755164052729.jpg",
+    "slug": "blackdecker-18v-cordless-pivot-dustbuster"
+  },
+  {
+    "id": "f9d40a02-ac07-4d16-816d-0fcd07150d02",
+    "name": "Aluminium Rod for Pullman PV900 Backpack Vacuum Cleaner 2pcs",
+    "price": 19.99,
+    "description": "Aluminium Rod for Pullman PV900 Backpack Vacuum Cleaner 2pcs",
+    "brand": "Bissell",
+    "category": "Bissell",
+    "imageUrl": "/placeholder.png",
+    "slug": "aluminium-rod-for-pullman-pv900-backpack-vacuum-cleaner-2pcs"
+  },
+  {
+    "id": "917ecb4d-b313-4e29-8d69-1e80dcd921eb",
+    "name": "Bissell Big Green Carpet Cleaner",
+    "price": 670,
+    "description": "Professional level carpet cleaning any time you need it. Get professional-grade carpet cleaning any time you want with the BISSELL Big Green® Deep Cleaning Machine.",
+    "brand": "Bissell",
+    "category": "Bissell",
+    "imageUrl": "/uploads/1755167006781.webp",
+    "slug": "bissell-big-green-carpet-cleaner",
+    "longdescription": ""
+  },
+  {
+    "id": "a6926b10-07a6-417f-ab42-af752ccbf630",
+    "name": "Bissell Steam Mop PowerFresh V",
+    "price": 299,
+    "description": "Naturally clean and sanitise! The BISSELL PowerFresh V Steam Mop is a hard surface steam cleaner that uses the natural power of steam to easily clean and sanitise your floors. Kills 99.9% of germs, bacteria and viruses* when used as directed",
+    "brand": "Bissell",
+    "category": "Bissell",
+    "imageUrl": "/uploads/1755163917987.webp",
+    "slug": "bissell-steam-mop-powerfresh-v"
+  },
+  {
+    "id": "71dfd9b3-0676-48c4-ae27-6abb6d6ccfe4",
+    "name": "Bosch Series 6 Bagged vacuum cleaner ProAnimal Red",
+    "price": 599,
+    "description": "Bosch Series 6 ProAnimal Vacuum. With powerful 300-850W suction, specialised pet hair pickup and a hygienic bagged system, this vacuum is perfect for homes with pets.",
+    "brand": "Bosch",
+    "category": "Bosch",
+    "imageUrl": "/uploads/1755164763458.png",
+    "slug": "bosch-series-6-bagged-vacuum-cleaner-proanimal-red"
+  },
+  {
+    "id": "9b928404-47da-435e-91af-48afd4399a0a",
+    "name": "Bosch Series 6 Bagged vacuum cleaner ProHygienic White",
+    "price": 450,
+    "description": "The Bosch Series 6 ProHygienic Vacuum offers powerful suction, sealed allergen filtration & easy handling. Perfect for keeping your home dust and allergen-free.",
+    "brand": "Bosch",
+    "category": "Bosch",
+    "imageUrl": "/uploads/1755164820410.webp",
+    "slug": "bosch-series-6-bagged-vacuum-cleaner-prohygienic-white"
+  },
+  {
+    "id": "80b2faf0-7802-43bb-92e0-7c9da5f86a24",
+    "name": "Bosch Vacuum cleaner Bag Type G ALL 4Pkt",
+    "price": 24.99,
+    "description": "Bosch Vacuum cleaner Bag Type G ALL 4Pkt",
+    "brand": "Bosch",
+    "category": "Bosch",
+    "imageUrl": "/uploads/1755164889502.webp",
+    "slug": "bosch-vacuum-cleaner-bag-type-g-all-4pkt"
+  },
+  {
+    "id": "8787e526-6b8e-4fa8-adc8-d1fb17d7e467",
+    "name": "Clean Up CU131 Synthetic Vacuum Cleaner Bags 5pkt To Suit Most Electrolux",
+    "price": 19.99,
+    "description": "Clean Up CU131 Synthetic Vacuum Cleaner Bags 5pkt To Suit Most Electrolux",
+    "brand": "Bosch",
+    "category": "Accessories & Parts",
+    "imageUrl": "/uploads/1755164937535.jpg",
+    "slug": "clean-up-cu131-synthetic-vacuum-cleaner-bags-5pkt-to-suit-most-electrolux",
+    "longdescription": ""
+  },
+  {
+    "id": "7ee3f6b6-5720-433d-8df3-a83976e3e918",
+    "name": "Bissell Steam Mop PowerFresh V",
+    "price": 44,
+    "description": "Naturally clean and sanitise! The BISSELL PowerFresh V Steam Mop is a hard surface steam cleaner that uses the natural power of steam to easily clean and sanitise your floors. Kills 99.9% of germs, bacteria and viruses* when used as directed",
+    "longdescription": "Naturally clean and sanitise! The BISSELL PowerFresh V Steam Mop is a hard surface steam cleaner that uses the natural power of steam to easily clean and sanitise your floors. Kills 99.9% of germs, bacteria and viruses* when used as directed",
+    "brand": "Bissell",
+    "category": "Bissell",
+    "imageUrl": "/placeholder.png",
+    "slug": "bissell-steam-mop-powerfresh-v"
+  },
+  {
+    "id": "c3581eef-30b5-4851-a2b9-8b39d7c52252",
+    "name": "BLACK+DECKER 18V ",
+    "price": 233,
+    "description": "BLACK+DECKER 18V Cordless Pivot dustbuster® ₹345.00  BLACK+DECKER 18V Cordless Pivot dustbuster®",
+    "longdescription": "BLACK+DECKER 18V Cordless Pivot dustbuster® ₹345.00  BLACK+DECKER 18V Cordless Pivot dustbuster®",
+    "brand": "Black Decker",
+    "category": "Accessories",
+    "imageUrl": "/placeholder.png",
+    "slug": "blackdecker-18v"
+  }
+]

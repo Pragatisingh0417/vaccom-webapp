@@ -1,0 +1,35 @@
+[
+  {
+    "id": "de30bbe9-95d9-46c4-811f-6349479c5506",
+    "name": "Bissell Pet Hair Eraser Upright Vacuum Cleaner",
+    "price": 455,
+    "description": "Bissell Pet Hair Eraser Upright Vacuum Cleaner",
+    "longdescription": "Bissell Pet Hair Eraser Upright Vacuum Cleaner",
+    "brand": "corded vacuums",
+    "category": "corded vacuums",
+    "imageUrl": "/placeholder.png",
+    "slug": "bissell-pet-hair-eraser-upright-vacuum-cleaner"
+  },
+  {
+    "id": "f7b10c04-1261-4979-9d2c-90a9c6c86dc9",
+    "name": "Electrolux Ease C3 Origin Vacuum Cleaner – Ice White",
+    "description": "Electrolux Ease C3 Origin Vacuum Cleaner – Ice White",
+    "imageUrl": "/placeholder.png",
+    "slug": "electrolux-ease-c3-origin-vacuum-cleaner-ice-white",
+    "price": 43,
+    "longdescription": "",
+    "brand": "corded vacuums",
+    "category": "corded vacuums"
+  },
+  {
+    "id": "0196b273-b9d4-4ca7-9ce8-cc0038b3b675",
+    "name": "Tineco Floor One S9 Artist Steam Floor Cleaner",
+    "price": 33,
+    "description": "Tineco Floor One S9 Artist Steam Floor Cleaner",
+    "longdescription": "140°C HyperSteam meand the Tineco FLOOR ONE S9 Artist Steam delivers the ultimate deep clean that defeats every stain, every time. Dual-layer scrapers effectively prevent hair from tangling, keeping the machine clog-free and ensuring smooth, uninterrupted cleaning.\n\nMHCBS Technology ensures consistent clean brush washing, since only clean brushes make clean floors. Whether it’s sticky kitchen floors, muddy footprints, or pet messes, our 140°C steam mop makes tough stains a thing of the past. Experience quick and efficient cleaning like never before.",
+    "brand": "Wertheim",
+    "category": "Hard Floor Cleaners",
+    "imageUrl": "/placeholder.png",
+    "slug": "tineco-floor-one-s9-artist-steam-floor-cleaner"
+  }
+]

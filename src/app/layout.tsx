@@ -1,16 +1,9 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import { CartProvider } from "@/context/CartContext";
+import { UserProvider } from "@/context/UserContext";
+import { WishlistProvider } from "@/context/WishlistContext"; // ✅ import WishlistProvider
+import ClientLayout from "./components/ClientLayout";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -19,15 +12,19 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
+      <body className="antialiased">
+        <UserProvider>
+          <CartProvider>
+            <WishlistProvider> {/* ✅ wrap with WishlistProvider */}
+              <ClientLayout>{children}</ClientLayout>
+            </WishlistProvider>
+          </CartProvider>
+        </UserProvider>
       </body>
     </html>
   );
