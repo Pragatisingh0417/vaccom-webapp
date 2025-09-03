@@ -11,13 +11,19 @@ export async function GET(
     const { slug } = await context.params; // ✅ await params
     await connectToDatabase();
 
-    // Decode slug to handle spaces, etc.
     const decodedSlug = decodeURIComponent(slug);
 
-    // Find products by category (case-insensitive)
-    const products = await Product.find({
-      category: { $regex: new RegExp(`^${decodedSlug}$`, "i") },
-    }).lean();
+    let filter: any = {};
+
+    // ✅ If slug is "today-deals", show only products marked as isTodayDeal
+    if (decodedSlug.toLowerCase() === "today-deals") {
+      filter.isTodayDeal = true;
+    } else {
+      // Otherwise, filter by category (case-insensitive)
+      filter.category = { $regex: new RegExp(`^${decodedSlug}$`, "i") };
+    }
+
+    const products = await Product.find(filter).lean();
 
     if (!products || products.length === 0) {
       return NextResponse.json(

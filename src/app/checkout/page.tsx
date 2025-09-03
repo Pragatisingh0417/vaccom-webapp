@@ -4,12 +4,10 @@ import { useEffect, useState } from "react";
 import { useCart } from "@/context/CartContext";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
-import CheckoutForm from "@/app/components/CheckoutForm"; // updated form with redirect
+import CheckoutForm from "@/app/components/CheckoutForm";
+import Image from "next/image";
 
-// Load Stripe using key from .env.local
-const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
-);
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
 type Country = { name?: { common?: string } };
 
@@ -25,10 +23,86 @@ export default function CheckoutPage() {
   const [selectedCountry, setSelectedCountry] = useState("");
   const [selectedState, setSelectedState] = useState("");
 
+  // Coupon states
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    code: string;
+    discount: number;
+    finalAmount: number;
+  } | null>(null);
+  const [couponMessage, setCouponMessage] = useState<string | null>(null);
+
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const shipping = 0;
   const delivery = 0;
   const total = subtotal + shipping + delivery;
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode) return alert("Enter a coupon code");
+
+    try {
+      const res = await fetch("/api/coupons/apply", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code: couponCode,
+          userId: "USER_ID", // replace with logged-in user ID
+          totalAmount: subtotal,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to apply coupon");
+
+      setAppliedCoupon({
+        code: couponCode,
+        discount: data.discount,
+        finalAmount: data.finalAmount,
+      });
+      setCouponMessage(`Coupon applied! Discount: $${data.discount.toFixed(2)}`);
+    } catch (err: any) {
+      setAppliedCoupon(null);
+      setCouponMessage(err.message);
+    }
+  };
+
+  const handlePlaceOrder = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return alert("Please login first");
+
+    const orderPayload = {
+      items: cart.map(item => ({
+        _id: item.id,
+        name: item.name,
+        price: item.price,
+        qty: item.quantity,
+        image: item.imageUrl || "/placeholder.png",
+      })),
+      amount: appliedCoupon ? appliedCoupon.finalAmount : total,
+      currency: "USD",
+      coupon: appliedCoupon?.code || null,
+    };
+
+    try {
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(orderPayload),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Order failed");
+
+      alert("Order placed successfully!");
+      window.location.href = "/orders";
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message);
+    }
+  };
 
   // Fetch countries
   useEffect(() => {
@@ -56,7 +130,7 @@ export default function CheckoutPage() {
     })();
   }, []);
 
-  // Fetch states when country changes
+  // Fetch states
   useEffect(() => {
     (async () => {
       if (!selectedCountry) {
@@ -159,7 +233,28 @@ export default function CheckoutPage() {
             <input type="text" placeholder="Zip / PIN Code" className="border p-3 rounded-md w-full" />
           </form>
 
-          {/* Stripe Card Form with redirect */}
+          {/* Coupon input */}
+          <div className="mt-4">
+            <label className="block text-sm font-medium mb-1">Have a coupon?</label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="Enter coupon code"
+                value={couponCode}
+                onChange={(e) => setCouponCode(e.target.value)}
+                className="border p-2 rounded w-full"
+              />
+              <button
+                onClick={handleApplyCoupon}
+                type="button"
+                className="bg-blue-500 text-white px-4 py-2 rounded"
+              >
+                Apply
+              </button>
+            </div>
+            {couponMessage && <p className="text-sm mt-1 text-green-600">{couponMessage}</p>}
+          </div>
+
           <CheckoutForm />
         </div>
 
@@ -172,11 +267,13 @@ export default function CheckoutPage() {
                 key={item.id}
                 className="flex items-center justify-between gap-4 bg-white p-3 rounded-md shadow-sm"
               >
-                <div className="relative">
-                  <img
+                <div className="relative w-16 h-16">
+                  <Image
                     src={item.imageUrl || "/placeholder.png"}
                     alt={item.name}
-                    className="w-16 h-16 object-contain rounded"
+                    fill
+                    className="object-contain rounded"
+                    unoptimized
                   />
                   {item.quantity > 1 && (
                     <span className="absolute -top-2 -right-2 bg-green-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
@@ -186,10 +283,10 @@ export default function CheckoutPage() {
                 </div>
                 <div className="flex-1">
                   <h3 className="text-sm font-medium">{item.name}</h3>
-                  <p className="text-sm text-gray-500">₹{item.price.toFixed(2)}</p>
+                  <p className="text-sm text-gray-500">${item.price.toFixed(2)}</p>
                 </div>
                 <span className="font-semibold text-sm">
-                  ₹{(item.price * item.quantity).toFixed(2)}
+                  ${(item.price * item.quantity).toFixed(2)}
                 </span>
               </div>
             ))}
@@ -198,7 +295,7 @@ export default function CheckoutPage() {
           <div className="mt-4 space-y-2 text-sm">
             <div className="flex justify-between">
               <span>Subtotal</span>
-              <span>₹{subtotal.toFixed(2)}</span>
+              <span>${subtotal.toFixed(2)}</span>
             </div>
             <div className="flex justify-between">
               <span>Delivery</span>
@@ -208,11 +305,24 @@ export default function CheckoutPage() {
               <span>Shipping</span>
               <span className="text-green-600 font-semibold">FREE</span>
             </div>
+            {appliedCoupon && (
+              <div className="flex justify-between text-green-700 font-semibold">
+                <span>Coupon ({appliedCoupon.code})</span>
+                <span>-${appliedCoupon.discount.toFixed(2)}</span>
+              </div>
+            )}
             <div className="flex justify-between text-lg font-bold border-t pt-2">
               <span>Total</span>
-              <span>₹{total.toFixed(2)}</span>
+              <span>${appliedCoupon ? appliedCoupon.finalAmount.toFixed(2) : total.toFixed(2)}</span>
             </div>
           </div>
+
+          <button
+            onClick={handlePlaceOrder}
+            className="mt-4 w-full bg-red-500 text-white px-4 py-2 rounded"
+          >
+            Place Order
+          </button>
         </div>
       </div>
     </Elements>

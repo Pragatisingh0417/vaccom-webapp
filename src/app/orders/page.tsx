@@ -10,6 +10,7 @@ interface OrderItem {
   price: number;
   qty: number;
   image?: string;
+  hoverImage?: string;
 }
 
 interface Order {
@@ -35,7 +36,6 @@ export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
   const [statusFilters, setStatusFilters] = useState<string[]>(["all"]);
   const [timeFilters, setTimeFilters] = useState<string[]>([]);
 
@@ -63,6 +63,8 @@ export default function OrdersPage() {
       }
 
       const data: OrdersApiResponse = await res.json();
+      console.log("Fetched orders:", data.orders);
+
       if (!data.success || !data.orders) {
         setOrders([]);
         setError(data.error || "No orders found.");
@@ -72,15 +74,29 @@ export default function OrdersPage() {
       const mappedOrders: Order[] = data.orders.map((o, idx) => ({
         _id: o._id,
         orderId: o.orderId || o._id || `order-${idx}`,
-        products: (o.products || []).map((p: any, i: number) => ({
-          id: p._id || p.id || i,
-          name: p.name || "Unnamed product",
-          price: Number(p.price) || 0,
-          qty: Number(p.qty) || 1,
-          image: p.image || "/placeholder.png",
-        })),
+        products: (o.products || []).map((p: any, i: number) => {
+          const imagePath = p.image?.startsWith("http")
+            ? p.image
+            : p.image
+            ? `/images/${p.image}`
+            : "/placeholder.png";
+          const hoverPath = p.hoverImage?.startsWith("http")
+            ? p.hoverImage
+            : p.hoverImage
+            ? `/images/${p.hoverImage}`
+            : imagePath;
+
+          return {
+            id: p._id || p.id || i,
+            name: p.name || "Unnamed product",
+            price: Number(p.price) || 0,
+            qty: Number(p.qty) || 1,
+            image: imagePath,
+            hoverImage: hoverPath,
+          };
+        }),
         amount: Number(o.amount) || 0,
-        currency: o.currency || "usd",
+        currency: o.currency || "INR",
         createdAt: o.createdAt,
         status: o.status || "Pending",
       }));
@@ -97,64 +113,6 @@ export default function OrdersPage() {
   useEffect(() => {
     fetchOrders();
   }, []);
-
-  if (loading) return <p className="p-6">Loading orders...</p>;
-
-  if (error)
-    return (
-      <p className="p-6 text-center text-red-600">
-        {error} <br />
-        <a href="/shop" className="text-blue-600 underline">
-          Shop now
-        </a>
-        .
-      </p>
-    );
-
-  if (!orders.length)
-    return (
-      <p className="p-6 text-center">
-        No orders found yet.{" "}
-        <a href="/shop" className="text-blue-600 underline">
-          Shop now
-        </a>
-        .
-      </p>
-    );
-
-  // ✅ Apply filters
-  const filteredOrders = orders.filter((o) => {
-    // Status filter
-    if (
-      !statusFilters.includes("all") &&
-      !statusFilters.includes(o.status || "Pending")
-    ) {
-      return false;
-    }
-
-    // Time filter
-    if (timeFilters.length > 0) {
-      const orderDate = new Date(o.createdAt);
-      const year = orderDate.getFullYear();
-      const now = new Date();
-
-      let matches = false;
-      for (const filter of timeFilters) {
-        if (filter === "last30") {
-          const diff = now.getTime() - orderDate.getTime();
-          const days = diff / (1000 * 60 * 60 * 24);
-          if (days <= 30) matches = true;
-        } else if (filter === "older") {
-          if (year < 2021) matches = true;
-        } else if (Number(filter) === year) {
-          matches = true;
-        }
-      }
-      if (!matches) return false;
-    }
-
-    return true;
-  });
 
   const handleStatusChange = (status: string) => {
     if (status === "all") {
@@ -175,13 +133,65 @@ export default function OrdersPage() {
     );
   };
 
+  const filteredOrders = orders.filter((o) => {
+    if (
+      !statusFilters.includes("all") &&
+      !statusFilters.includes(o.status || "Pending")
+    ) {
+      return false;
+    }
+
+    if (timeFilters.length > 0) {
+      const orderDate = new Date(o.createdAt);
+      const year = orderDate.getFullYear();
+      const now = new Date();
+
+      let matches = false;
+      for (const filter of timeFilters) {
+        if (filter === "last30") {
+          const daysDiff =
+            (now.getTime() - orderDate.getTime()) / (1000 * 60 * 60 * 24);
+          if (daysDiff <= 30) matches = true;
+        } else if (filter === "older") {
+          if (year < 2021) matches = true;
+        } else if (Number(filter) === year) {
+          matches = true;
+        }
+      }
+      if (!matches) return false;
+    }
+
+    return true;
+  });
+
+  if (loading) return <p className="p-6">Loading orders...</p>;
+  if (error)
+    return (
+      <p className="p-6 text-center text-red-600">
+        {error} <br />
+        <a href="/shop" className="text-blue-600 underline">
+          Shop now
+        </a>
+        .
+      </p>
+    );
+  if (!orders.length)
+    return (
+      <p className="p-6 text-center">
+        No orders found yet.{" "}
+        <a href="/shop" className="text-blue-600 underline">
+          Shop now
+        </a>
+        .
+      </p>
+    );
+
   return (
     <div className="flex p-6 gap-6 bg-pink-100">
       {/* Sidebar Filters */}
       <aside className="w-1/6 border rounded-lg p-4 shadow bg-blue-50 h-fit">
         <h2 className="text-lg font-semibold mb-3">Filters</h2>
 
-        {/* Order Status */}
         <div className="mb-4">
           <p className="font-medium mb-2">Order Status</p>
           {["all", "Pending", "Completed", "Cancelled"].map((status) => (
@@ -196,7 +206,6 @@ export default function OrdersPage() {
           ))}
         </div>
 
-        {/* Order Time */}
         <div>
           <p className="font-medium mb-2">Order Time</p>
           <label className="flex items-center gap-2 mb-1">
@@ -229,8 +238,7 @@ export default function OrdersPage() {
       </aside>
 
       {/* Orders Section */}
-      <main className="w-3/2 space-y-4 bg-pink-100" >
-
+      <main className="flex-1 space-y-4 bg-pink-100">
         {filteredOrders.map((order) => (
           <div
             key={order._id}
@@ -270,13 +278,25 @@ export default function OrdersPage() {
                 key={item.id}
                 className="flex items-center gap-4 border-t py-2"
               >
-                <Image
-                  src={item.image || "/placeholder.png"}
-                  alt={item.name}
-                  width={150}
-                  height={20}
-                  className="rounded object-cover border"
-                />
+                <div className="relative w-[150px] h-[200px]">
+                  <Image
+                    src={item.image || "/placeholder.png"} // ✅ always a string
+                    alt={item.name || "Product"}
+                    fill
+                    className="rounded object-cover border transition-opacity duration-300 ease-in-out opacity-100 hover:opacity-0"
+                    unoptimized
+                  />
+                  {item.hoverImage && (
+                    <Image
+                      src={item.hoverImage || item.image || "/placeholder.png"} // ✅ fallback chain
+                      alt={item.name + " hover"}
+                      fill
+                      className="rounded object-cover border absolute top-0 left-0 opacity-0 hover:opacity-100 transition-opacity duration-300"
+                      unoptimized
+                    />
+                  )}
+                </div>
+
                 <div className="flex-1">
                   <p className="font-medium">{item.name}</p>
                   <p className="text-sm text-gray-600">

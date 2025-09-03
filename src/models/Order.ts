@@ -17,13 +17,15 @@ const OrderSchema = new mongoose.Schema({
       name: { type: String, required: true },
       price: { type: Number, required: true },
       qty: { type: Number, required: true },
+      image: { type: String, default: "/placeholder.png" }, // ✅ add image here
     },
   ],
   amount: { type: Number, required: true },
-  currency: { type: String, default: "usd", lowercase: true }, // ✅ always stored lowercase
+  currency: { type: String, default: "usd", lowercase: true },
   status: { type: String, default: "pending" },
   createdAt: { type: Date, default: Date.now },
 });
+
 
 // ✅ Auto-generate unique orderId if missing
 OrderSchema.pre("save", function (next) {

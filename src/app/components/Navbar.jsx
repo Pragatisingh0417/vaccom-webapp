@@ -38,6 +38,8 @@ const productLinks = [
   { name: 'Robots', img: '/category-image/robots.webp', slug: 'robots' },
   { name: 'Carpet Washers', img: '/category-image/Carpet Washers.webp', slug: 'carpet-washers' },
   { name: 'Hard Floor Cleaners', img: '/category-image/Hard Floor Cleaners.webp', slug: 'hard-floor-cleaners' },
+    { name: 'Steamers', img: '/category-image/steamers.webp', slug: 'steamers' },
+
   { name: 'Commercial', img: '/category-image/commercial.webp', slug: 'commercial' },
   { name: 'Cleaning Chemicals', img: '/category-image/Cleaning-Chemicals.webp', slug: 'cleaning-chemicals' },
   { name: 'Accessories & Parts', img: '/category-image/Accessories.webp', slug: 'accessories-parts' },

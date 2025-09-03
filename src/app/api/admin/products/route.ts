@@ -1,7 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";       // ✅ Next.js Response helper
 import { connectToDatabase } from "@/app/lib/mongodb";
-import Product from "@/models/Product";
-import { generateSlug } from "@/utils/slug"; // utility function for slugs
+import Product from "@/models/Product";           // ✅ Your Product model
+import { generateSlug } from "@/utils/slug";     // ✅ Utility to generate slug
 
 // GET: fetch all products
 export async function GET() {
@@ -19,24 +19,26 @@ export async function GET() {
 }
 
 // POST: add new product
+// POST: add new product
 export async function POST(req: Request) {
   try {
     await connectToDatabase();
 
-    // ✅ Parse FormData instead of JSON
     const formData = await req.formData();
 
     const name = formData.get("name") as string;
     const price = formData.get("price") as string;
+    const salePrice = formData.get("salePrice") as string; // optional
     const shortDesc = formData.get("shortDesc") as string;
     const longDesc = formData.get("longDesc") as string;
     const brand = formData.get("brand") as string;
     const category = formData.get("category") as string;
+    const stock = Number(formData.get("stock") || 0);       // ✅ convert stock to number
+    const isTodayDeal = formData.get("isTodayDeal") === "true";
 
-    // ✅ Handle multiple images
+    // Handle multiple images
     const files = formData.getAll("images") as File[];
     const imageUrls: string[] = [];
-
     for (const file of files) {
       const buffer = Buffer.from(await file.arrayBuffer());
       const base64 = `data:${file.type};base64,${buffer.toString("base64")}`;
@@ -49,11 +51,15 @@ export async function POST(req: Request) {
       name,
       slug,
       price: Number(price),
+      salePrice: salePrice ? Number(salePrice) : undefined,
       shortDesc,
       longDesc,
       brand,
       category,
       images: imageUrls,
+      stock,                          // ✅ save stock
+      isOutOfStock: stock <= 0,       // ✅ auto-update out of stock
+      isTodayDeal,
     });
 
     return NextResponse.json(newProduct, { status: 201 });
@@ -65,3 +71,5 @@ export async function POST(req: Request) {
     );
   }
 }
+
+

@@ -3,44 +3,54 @@ import { useState, ChangeEvent, FormEvent } from "react";
 
 interface ProductForm {
   name: string;
-  price: string;
+  price: string;         
+  salePrice?: string;    
   shortDesc: string;
   longDesc: string;
   brand: string;
   category: string;
   images: File[];
+  isTodayDeal?: boolean; 
+  stock: string;         
 }
 
 export default function AddProductPage() {
   const brands = [
-    "Akitas", "Bissell", "Black Decker", "Bosch", "Dreame", "Dyson", 
-    "Ecovacs", "Enzyme Wizard", "Hoover", "i-Vac", "Kobold", "Nilfisk", 
-    "Numatic", "Midea", "Miele", "Panasonic", "Pullman", "Roborock", 
-    "Sauber", "Sebo", "Shark", "Tineco", "Vax", "Wertheim"
+    "Akitas","Bissell","Black Decker","Bosch","Dreame","Dyson",
+    "Ecovacs","Enzyme Wizard","Hoover","i-Vac","Kobold","Nilfisk",
+    "Numatic","Midea","Miele","Panasonic","Pullman","Roborock",
+    "Sauber","Sebo","Shark","Tineco","Vax","Wertheim"
   ];
 
   const categories = [
-    "Corded Vacuums", "Cordless Vacuums", "Robots", "Carpet Washers", 
-    "Hard Floor Cleaners", "Steamers", "Commercial", "Cleaning Chemicals", 
-    "Accessories & Parts", "Vacuum Bags & Filters"
+    "Corded Vacuums","Cordless Vacuums","Robots","Carpet Washers",
+    "Hard Floor Cleaners","Steamers","Commercial","Cleaning Chemicals",
+    "Accessories & Parts","Vacuum Bags & Filters"
   ];
 
   const [product, setProduct] = useState<ProductForm>({
     name: "",
     price: "",
+    salePrice: "",
     shortDesc: "",
     longDesc: "",
     brand: "",
     category: "",
     images: [],
+    isTodayDeal: false,
+    stock: "",
   });
 
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
-    const { name, value, files } = e.target as HTMLInputElement;
+    const { name, value, files, type, checked } = e.target as HTMLInputElement;
     if (name === "images" && files) {
-      setProduct({ ...product, images: Array.from(files) });
+        setProduct({ ...product, images: [...product.images, ...Array.from(files)] });
+
+      // setProduct({ ...product, images: Array.from(files) });
+    } else if (name === "isTodayDeal" && type === "checkbox") {
+      setProduct({ ...product, isTodayDeal: checked });
     } else {
       setProduct({ ...product, [name]: value });
     }
@@ -52,10 +62,15 @@ export default function AddProductPage() {
       const formData = new FormData();
       formData.append("name", product.name);
       formData.append("price", product.price);
+      if (product.salePrice) formData.append("salePrice", product.salePrice);
       formData.append("shortDesc", product.shortDesc);
       formData.append("longDesc", product.longDesc);
       formData.append("brand", product.brand);
       formData.append("category", product.category);
+      formData.append("isTodayDeal", product.isTodayDeal ? "true" : "false");
+
+      // ✅ Send stock as a number
+      formData.append("stock", String(Number(product.stock)));
 
       product.images.forEach((img) => formData.append("images", img));
 
@@ -69,11 +84,14 @@ export default function AddProductPage() {
         setProduct({
           name: "",
           price: "",
+          salePrice: "",
           shortDesc: "",
           longDesc: "",
           brand: "",
           category: "",
           images: [],
+          isTodayDeal: false,
+          stock: "",
         });
       } else {
         const data = await res.json();
@@ -97,15 +115,36 @@ export default function AddProductPage() {
           required
           className="w-full border p-2 rounded"
         />
+
         <input
           name="price"
           type="number"
           value={product.price}
           onChange={handleChange}
-          placeholder="Price"
+          placeholder="Retail Price"
           required
           className="w-full border p-2 rounded"
         />
+
+        <input
+          name="salePrice"
+          type="number"
+          value={product.salePrice || ""}
+          onChange={handleChange}
+          placeholder="Sale Price (optional)"
+          className="w-full border p-2 rounded"
+        />
+
+        <input
+          name="stock"
+          type="number"
+          value={product.stock}
+          onChange={handleChange}
+          placeholder="Number of Stocks"
+          required
+          className="w-full border p-2 rounded"
+        />
+
         <input
           name="shortDesc"
           value={product.shortDesc}
@@ -114,6 +153,7 @@ export default function AddProductPage() {
           required
           className="w-full border p-2 rounded"
         />
+
         <textarea
           name="longDesc"
           value={product.longDesc}
@@ -148,6 +188,16 @@ export default function AddProductPage() {
             <option key={c} value={c}>{c}</option>
           ))}
         </select>
+
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            name="isTodayDeal"
+            checked={product.isTodayDeal}
+            onChange={handleChange}
+          />
+          <span>Show on Today's Deal page</span>
+        </label>
 
         <input
           name="images"

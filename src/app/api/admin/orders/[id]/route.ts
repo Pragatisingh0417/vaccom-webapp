@@ -5,14 +5,25 @@ import Order from "@/models/Order";
 
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } } // dynamic params from route
+  { params }: { params: { id: string } }
 ) {
   try {
-    // Connect to DB first
+    // Connect to MongoDB
     await connectToDatabase();
 
-    // Fetch order by ID directly from params.id
-    const order = await Order.findById(params.id)
+    // Destructure ID from route params
+    const { id } = params;
+
+    // Validate ID format (optional but recommended)
+    if (!id || id.length !== 24) {
+      return NextResponse.json(
+        { success: false, error: "Invalid order ID" },
+        { status: 400 }
+      );
+    }
+
+    // Fetch order and populate user info
+    const order = await Order.findById(id)
       .populate("user", "name email")
       .lean();
 

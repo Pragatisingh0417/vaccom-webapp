@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import User from "@/models/User";
 
 interface User {
   _id: string;
@@ -37,14 +36,17 @@ export default function AdminOrdersPage() {
     })();
   }, []);
 
-  if (loading) return <p className="text-center py-10">Loading orders...</p>;
-
   const statusColors: Record<string, string> = {
     Pending: "bg-yellow-100 text-yellow-800",
     Completed: "bg-green-100 text-green-800",
     Cancelled: "bg-red-100 text-red-800",
     Processing: "bg-blue-100 text-blue-800",
   };
+
+  if (loading) return <p className="text-center py-10">Loading orders...</p>;
+
+  if (!orders.length)
+    return <p className="text-center py-10 text-gray-600">No orders found.</p>;
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
@@ -74,11 +76,16 @@ export default function AdminOrdersPage() {
 
                 <td className="px-6 py-4">
                   {order.user?.name || "Unknown"}{" "}
-                  <span className="text-gray-400 text-sm">({order.user?._id})</span>
+                  <span className="text-gray-400 text-sm">
+                    ({order.user?._id})
+                  </span>
                 </td>
 
                 <td className="px-6 py-4 font-semibold text-gray-700">
-                  ₹{order.amount}
+                  {new Intl.NumberFormat("en-IN", {
+                    style: "currency",
+                    currency: "USD",
+                  }).format(order.amount)}
                 </td>
 
                 <td className="px-6 py-4">
@@ -92,7 +99,13 @@ export default function AdminOrdersPage() {
                 </td>
 
                 <td className="px-6 py-4 text-gray-500">
-                  {new Date(order.createdAt).toLocaleString()}
+                  {new Date(order.createdAt).toLocaleDateString("en-IN", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
                 </td>
 
                 <td className="px-6 py-4">

@@ -60,3 +60,42 @@ export async function DELETE(req: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+
+// ✅ PUT - update coupon by ID (Admin only)
+export async function PUT(req: Request) {
+  if (!(await checkAdminAuth())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const { id, code, discountType, discountValue, minPurchase, expiryDate, usageLimit } =
+      await req.json();
+
+    if (!id) {
+      return NextResponse.json({ error: "Coupon ID is required" }, { status: 400 });
+    }
+
+    await connectToDatabase();
+
+    const updated = await Coupon.findByIdAndUpdate(
+      id,
+      {
+        code,
+        discountType,
+        discountValue,
+        minPurchase,
+        expiryDate: expiryDate ? new Date(expiryDate) : undefined,
+        usageLimit,
+      },
+      { new: true }
+    );
+
+    if (!updated) {
+      return NextResponse.json({ error: "Coupon not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true, coupon: updated });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}

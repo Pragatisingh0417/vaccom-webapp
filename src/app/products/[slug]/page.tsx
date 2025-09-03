@@ -15,7 +15,7 @@ interface Product {
   shortDesc?: string;
   longDesc?: string;
   price: number;
-  image: string;
+  images: string[];
   features?: string[];
   rating?: number;
   sold?: number;
@@ -28,8 +28,10 @@ export default function ProductDetail() {
   const [quantity, setQuantity] = useState(1);
   const [inWishlist, setInWishlist] = useState(false);
   const [showReviews, setShowReviews] = useState(false);
-  const [notify, setNotify] = useState(""); // toast message
-  const [notifyColor, setNotifyColor] = useState("green"); // green or red
+  const [notify, setNotify] = useState(""); 
+  const [notifyColor, setNotifyColor] = useState("green"); 
+  const [mainImage, setMainImage] = useState<string>("");
+  const [showModal, setShowModal] = useState(false);
 
   const { cart, addToCart, increaseQuantity, decreaseQuantity } = useCart();
   const { wishlist, addToWishlist, removeFromWishlist } = useWishlist();
@@ -43,6 +45,9 @@ export default function ProductDetail() {
         if (!res.ok) throw new Error("Failed to fetch product");
         const data = await res.json();
         setProduct(data);
+        setMainImage(
+          data.images && data.images.length > 0 ? data.images[0] : "/placeholder.png"
+        );
       } catch (err) {
         console.error(err);
       } finally {
@@ -66,24 +71,16 @@ export default function ProductDetail() {
     id: product._id,
     name: product.name,
     price: product.price,
-    imageUrl: product.image,
+    imageUrl: mainImage,
     slug: product.slug,
     brand: "Unknown",
   };
 
   const cartItem = cart.find((item) => item.id === productForCart.id);
 
-  // Wishlist toggle
   const toggleWishlist = () => {
     if (!inWishlist) {
-      addToWishlist({
-        id: product._id,
-        name: product.name,
-        price: product.price,
-        imageUrl: product.image,
-        slug: product.slug,
-        brand: "Unknown",
-      });
+      addToWishlist(productForCart);
       setNotify("Added to wishlist!");
       setNotifyColor("green");
     } else {
@@ -123,15 +120,30 @@ export default function ProductDetail() {
       {/* Product layout */}
       <div className="flex flex-col md:flex-row gap-8">
         {/* Left: Image */}
-        <div className="md:w-1/2 flex justify-center">
+        <div className="md:w-1/2 flex flex-col items-center gap-2">
           <img
-            src={product.image}
+            src={mainImage}
             alt={product.name}
-            className="w-full max-w-md rounded-lg"
+            className="w-full max-w-md rounded-lg cursor-pointer"
+            onClick={() => setShowModal(true)}
           />
+
+          {/* Thumbnails / hover images */}
+          <div className="flex gap-2 mt-2">
+            {product.images.map((img, idx) => (
+              <img
+                key={idx}
+                src={img}
+                alt={`Thumbnail ${idx}`}
+                className="w-16 h-16 object-cover rounded-lg border cursor-pointer hover:border-blue-500"
+                onMouseEnter={() => setMainImage(img)}
+                onClick={() => setMainImage(img)}
+              />
+            ))}
+          </div>
         </div>
 
-        {/* Right: Details */}
+        {/* Right: Product Info */}
         <div className="md:w-1/2 flex flex-col gap-3">
           <h1 className="text-3xl font-bold">{product.name}</h1>
 
@@ -218,6 +230,36 @@ export default function ProductDetail() {
           </div>
         )}
       </div>
+
+      {/* Modal for viewing all images */}
+      <AnimatePresence>
+        {showModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50"
+            onClick={() => setShowModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.8 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.8 }}
+              className="bg-white p-4 rounded-lg max-w-3xl max-h-[90vh] overflow-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {product.images.map((img, idx) => (
+                <img
+                  key={idx}
+                  src={img}
+                  alt={`Image ${idx}`}
+                  className="mb-2 w-full object-contain rounded"
+                />
+              ))}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

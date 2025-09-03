@@ -2,6 +2,7 @@
 
 import { useCart } from "@/context/CartContext";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 export default function CartPage() {
   const router = useRouter();
@@ -28,11 +29,16 @@ export default function CartPage() {
             className="flex items-center justify-between bg-gray-100 p-4 rounded-lg shadow"
           >
             <div className="flex items-center gap-4">
-              <img
-                src={item.imageUrl || "/placeholder.png"}
-                alt={item.name}
-                className="w-20 h-20 object-contain rounded"
-              />
+              <div className="w-20 h-20 relative">
+                <Image
+                  src={item.imageUrl || "/placeholder.png"}
+                  alt={item.name}
+                  fill
+                  className="object-contain rounded"
+                  unoptimized
+                />
+              </div>
+
               <div>
                 <h2 className="font-semibold">{item.name}</h2>
                 <p className="text-red-600 font-bold">
@@ -55,6 +61,7 @@ export default function CartPage() {
                 </div>
               </div>
             </div>
+
             <button
               onClick={() => removeFromCart(item.id)}
               className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded"

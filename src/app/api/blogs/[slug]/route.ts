@@ -4,12 +4,12 @@ import Blog from "@/models/Blog";
 
 export async function GET(
   req: Request,
-  context: { params: Promise<{ slug: string }> } // ✅ params is a Promise
+  context: { params: { slug: string } } // ✅ no Promise
 ) {
   try {
     await connectToDatabase();
 
-    const { slug } = await context.params; // ✅ await it
+    const { slug } = context.params; // ✅ direct access
     const blog = await Blog.findOne({ slug });
 
     if (!blog) {
@@ -24,12 +24,12 @@ export async function GET(
 
 export async function PUT(
   req: Request,
-  context: { params: Promise<{ slug: string }> }
+  context: { params: { slug: string } }
 ) {
   try {
     await connectToDatabase();
 
-    const { slug } = await context.params; // ✅ await here too
+    const { slug } = context.params;
     const data = await req.json();
 
     const updatedBlog = await Blog.findOneAndUpdate({ slug }, data, {
@@ -48,12 +48,12 @@ export async function PUT(
 
 export async function DELETE(
   req: Request,
-  context: { params: Promise<{ slug: string }> }
+  context: { params: { slug: string } }
 ) {
   try {
     await connectToDatabase();
 
-    const { slug } = await context.params; // ✅ await
+    const { slug } = context.params;
     const deletedBlog = await Blog.findOneAndDelete({ slug });
 
     if (!deletedBlog) {

@@ -26,21 +26,20 @@ export async function POST(req: Request) {
       id: string;
     };
 
-    // ✅ normalize items from body
-    const normalizedItems = body.items.map((item: any) => ({
-      productId: item._id,
-      name: item.name,
-      price: item.price,
-      qty: item.qty,
-    }));
+   const normalizedItems = body.items.map((item: any) => ({
+  productId: item._id,
+  name: item.name,
+  price: item.price,
+  qty: item.qty,
+  image: item.image || "/placeholder.png", // ✅ save image
+}));
 
-    // ✅ save order
-    const order = await Order.create({
-      user: decoded.id, // model hook will cast string → ObjectId
-      products: normalizedItems,
-      amount: body.amount,
-      currency: body.currency || "usd",
-    });
+const order = await Order.create({
+  user: decoded.id,
+  products: normalizedItems,
+  amount: body.amount,
+  currency: body.currency || "usd",
+});
 
     return NextResponse.json({ success: true, order }, { status: 201 });
   } catch (err: any) {
