@@ -1,14 +1,14 @@
-// /app/api/admin/orders/route.ts
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/app/lib/mongodb";
 import Order from "@/models/Order";
 
-// Type definitions
 interface Product {
   productId: string;
   name: string;
   price: number | string;
   qty?: number | string;
+  image?: string;
+  imageUrl?: string;
 }
 
 interface OrderDetail {
@@ -25,12 +25,13 @@ export async function GET(req: Request) {
   try {
     await connectToDatabase();
 
+    // ✅ Populate user + product details (fetching name, price, image fields)
     const orders = await Order.find()
       .populate("user", "name email")
+      .populate("products.productId", "name price image imageUrl") // 👈 add this
       .sort({ createdAt: -1 })
       .lean();
 
-    // Sanitize and type-check orders
     const sanitizedOrders: OrderDetail[] = orders.map((order: any) => ({
       _id: order._id,
       user: order.user,
@@ -39,10 +40,12 @@ export async function GET(req: Request) {
       currency: order.currency,
       amount: Number(order.amount),
       products: order.products.map((p: any) => ({
-        productId: p.productId,
-        name: p.name,
-        price: Number(p.price),
+        productId: p.productId?._id || p.productId,
+        name: p.productId?.name || p.name,
+        price: Number(p.productId?.price || p.price),
         qty: Number(p.qty) || 1,
+        image: p.productId?.image || p.image || null,       // ✅ include image
+        imageUrl: p.productId?.imageUrl || p.imageUrl || null, // ✅ include imageUrl
       })),
     }));
 

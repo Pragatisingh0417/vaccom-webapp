@@ -31,22 +31,31 @@ export default function CheckoutPage() {
     finalAmount: number;
   } | null>(null);
   const [couponMessage, setCouponMessage] = useState<string | null>(null);
+  const [couponError, setCouponError] = useState<string | null>(null);
 
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const shipping = 0;
   const delivery = 0;
   const total = subtotal + shipping + delivery;
 
+  // Apply coupon
   const handleApplyCoupon = async () => {
-    if (!couponCode) return alert("Enter a coupon code");
+    if (!couponCode) return setCouponError("⚠️ Enter a coupon code");
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      return setCouponError("⚠️ Please login first to use a coupon");
+    }
 
     try {
       const res = await fetch("/api/coupons/apply", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // ✅ send token
+        },
         body: JSON.stringify({
           code: couponCode,
-          userId: "USER_ID", // replace with logged-in user ID
           totalAmount: subtotal,
         }),
       });
@@ -59,19 +68,23 @@ export default function CheckoutPage() {
         discount: data.discount,
         finalAmount: data.finalAmount,
       });
-      setCouponMessage(`Coupon applied! Discount: $${data.discount.toFixed(2)}`);
+
+      setCouponMessage(`✅ Coupon applied! You saved $${data.discount.toFixed(2)}`);
+      setCouponError(null);
     } catch (err: any) {
       setAppliedCoupon(null);
-      setCouponMessage(err.message);
+      setCouponError(err.message);
+      setCouponMessage(null);
     }
   };
 
+  // Place order
   const handlePlaceOrder = async () => {
     const token = localStorage.getItem("token");
     if (!token) return alert("Please login first");
 
     const orderPayload = {
-      items: cart.map(item => ({
+      items: cart.map((item) => ({
         _id: item.id,
         name: item.name,
         price: item.price,
@@ -79,7 +92,7 @@ export default function CheckoutPage() {
         image: item.imageUrl || "/placeholder.png",
       })),
       amount: appliedCoupon ? appliedCoupon.finalAmount : total,
-      currency: "USD",
+      currency: "usd",
       coupon: appliedCoupon?.code || null,
     };
 
@@ -96,7 +109,7 @@ export default function CheckoutPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Order failed");
 
-      alert("Order placed successfully!");
+      alert("🎉 Order placed successfully!");
       window.location.href = "/orders";
     } catch (err: any) {
       console.error(err);
@@ -168,6 +181,7 @@ export default function CheckoutPage() {
         <div className="space-y-6">
           <h2 className="text-2xl font-bold mb-4">Contact & Payment</h2>
 
+          {/* FORM */}
           <form className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <input type="text" placeholder="First Name" className="border p-3 rounded-md w-full" />
             <input type="text" placeholder="Last Name" className="border p-3 rounded-md w-full" />
@@ -185,7 +199,9 @@ export default function CheckoutPage() {
                 }}
                 disabled={countryLoading || !!countryError}
               >
-                <option value="">{countryLoading ? "Loading countries..." : "Select Country"}</option>
+                <option value="">
+                  {countryLoading ? "Loading countries..." : "Select Country"}
+                </option>
                 {!countryLoading &&
                   countries.map((c) => (
                     <option key={c} value={c}>{c}</option>
@@ -203,7 +219,9 @@ export default function CheckoutPage() {
                   onChange={(e) => setSelectedState(e.target.value)}
                   disabled={stateLoading}
                 >
-                  <option value="">{stateLoading ? "Loading states..." : "Select State"}</option>
+                  <option value="">
+                    {stateLoading ? "Loading states..." : "Select State"}
+                  </option>
                   {states.map((s) => (
                     <option key={s} value={s}>{s}</option>
                   ))}
@@ -253,6 +271,7 @@ export default function CheckoutPage() {
               </button>
             </div>
             {couponMessage && <p className="text-sm mt-1 text-green-600">{couponMessage}</p>}
+            {couponError && <p className="text-sm mt-1 text-red-600">{couponError}</p>}
           </div>
 
           <CheckoutForm />
@@ -308,7 +327,7 @@ export default function CheckoutPage() {
             {appliedCoupon && (
               <div className="flex justify-between text-green-700 font-semibold">
                 <span>Coupon ({appliedCoupon.code})</span>
-                <span>-${appliedCoupon.discount.toFixed(2)}</span>
+                <span>- ${appliedCoupon.discount.toFixed(2)}</span>
               </div>
             )}
             <div className="flex justify-between text-lg font-bold border-t pt-2">

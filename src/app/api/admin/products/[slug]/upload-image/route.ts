@@ -1,23 +1,26 @@
 import { NextResponse } from "next/server";
 import fs from "fs";
+import fsp from "fs/promises";
 import path from "path";
 
-export const config = {
-  api: {
-    bodyParser: false, // we’ll handle formData manually
-  },
-};
-
-export async function POST(req: Request, { params }: { params: { slug: string } }) {
+export async function POST(
+  req: Request,
+  { params }: { params: { slug: string } }
+) {
   const { slug } = params;
-  if (!slug) return NextResponse.json({ error: "Slug required" }, { status: 400 });
+  if (!slug) {
+    return NextResponse.json({ error: "Slug required" }, { status: 400 });
+  }
 
   try {
     const formData = await req.formData();
     const files: File[] = formData.getAll("images") as File[];
 
-    const uploadDir = path.join(process.cwd(), "/public/uploads");
-    if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+    // ✅ Ensure upload dir exists
+    const uploadDir = path.join(process.cwd(), "public", "uploads");
+    if (!fs.existsSync(uploadDir)) {
+      await fsp.mkdir(uploadDir, { recursive: true });
+    }
 
     const filePaths: string[] = [];
 
@@ -26,13 +29,16 @@ export async function POST(req: Request, { params }: { params: { slug: string } 
       const buffer = Buffer.from(arrayBuffer);
       const filename = `${Date.now()}-${file.name}`;
       const filepath = path.join(uploadDir, filename);
-      await fs.promises.writeFile(filepath, buffer);
+
+      await fsp.writeFile(filepath, buffer);
+
+      // ✅ Publicly accessible path
       filePaths.push(`/uploads/${filename}`);
     }
 
     return NextResponse.json({ filePaths });
   } catch (err) {
-    console.error(err);
+    console.error("❌ Upload error:", err);
     return NextResponse.json({ error: "Upload failed" }, { status: 500 });
   }
 }

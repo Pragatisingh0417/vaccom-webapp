@@ -51,7 +51,7 @@ const clearAuth = () => {
   const logout = () => {
     clearAuth();
     setUser(null);
-    router.push('/login'); // redirect after logout
+    router.push('/auth'); 
   };
 
   // Close profile dropdown on outside click

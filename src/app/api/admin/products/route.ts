@@ -27,22 +27,28 @@ export async function POST(req: Request) {
     const formData = await req.formData();
 
     const name = formData.get("name") as string;
-    const price = formData.get("price") as string;
-    const salePrice = formData.get("salePrice") as string; // optional
+    const price = Number(formData.get("price"));
     const shortDesc = formData.get("shortDesc") as string;
     const longDesc = formData.get("longDesc") as string;
     const brand = formData.get("brand") as string;
     const category = formData.get("category") as string;
-    const stock = Number(formData.get("stock") || 0);       // ✅ convert stock to number
+    const stock = Number(formData.get("stock") || 0);
     const isTodayDeal = formData.get("isTodayDeal") === "true";
 
-    // Handle multiple images
+    // ✅ Save files to public/uploads
     const files = formData.getAll("images") as File[];
-    const imageUrls: string[] = [];
+    const imagePaths: string[] = [];
+    const fs = require("fs");
+    const path = require("path");
+    const uploadDir = path.join(process.cwd(), "public", "uploads");
+    if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+
     for (const file of files) {
       const buffer = Buffer.from(await file.arrayBuffer());
-      const base64 = `data:${file.type};base64,${buffer.toString("base64")}`;
-      imageUrls.push(base64);
+      const filename = `${Date.now()}-${file.name}`;
+      const filepath = path.join(uploadDir, filename);
+      await fs.promises.writeFile(filepath, buffer);
+      imagePaths.push(`/uploads/${filename}`);
     }
 
     const slug = generateSlug(name);
@@ -50,26 +56,23 @@ export async function POST(req: Request) {
     const newProduct = await Product.create({
       name,
       slug,
-      price: Number(price),
-      salePrice: salePrice ? Number(salePrice) : undefined,
+      price,
       shortDesc,
       longDesc,
       brand,
       category,
-      images: imageUrls,
-      stock,                          // ✅ save stock
-      isOutOfStock: stock <= 0,       // ✅ auto-update out of stock
+      images: imagePaths, // ✅ store URLs instead of base64
+      stock,
+      isOutOfStock: stock <= 0,
       isTodayDeal,
     });
 
     return NextResponse.json(newProduct, { status: 201 });
   } catch (err) {
     console.error("POST product error:", err);
-    return NextResponse.json(
-      { error: "Failed to add product" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to add product" }, { status: 500 });
   }
 }
+
 
 

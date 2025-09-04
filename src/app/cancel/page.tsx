@@ -7,8 +7,21 @@ export default function CancelPage() {
   const router = useRouter();
 
   useEffect(() => {
+    async function cancelTransaction() {
+      const latestTx = localStorage.getItem("latestTransactionId");
+      if (latestTx) {
+        await fetch(`/api/admin/transactions/${latestTx}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "failed" }),
+        });
+      }
+    }
+
+    cancelTransaction();
+
     const timer = setTimeout(() => {
-      router.push("/checkout"); // 👈 redirect back to checkout after 5s
+      router.push("/checkout");
     }, 5000);
 
     return () => clearTimeout(timer);
@@ -19,7 +32,8 @@ export default function CancelPage() {
       <div className="bg-white p-8 rounded-2xl shadow-lg">
         <h1 className="text-3xl font-bold text-red-600">❌ Payment Cancelled</h1>
         <p className="mt-4 text-gray-600">
-          Your payment was not completed. You’ll be redirected back to the checkout page in 5 seconds.
+          Your payment was not completed. You’ll be redirected back to the
+          checkout page in 5 seconds.
         </p>
         <button
           onClick={() => router.push("/checkout")}

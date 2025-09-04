@@ -17,6 +17,7 @@ interface Order {
     price: number | string;
     qty?: number | string;
     image?: string;
+    imageUrl?: string;
   }[];
 }
 
@@ -41,7 +42,14 @@ export default function OrdersList() {
   if (loading) return <p>Loading orders...</p>;
   if (!orders.length) return <p>No orders found.</p>;
 
-  // Helper to render status badge
+  // ✅ Currency formatter
+  const formatCurrency = (amount: number, currency: string) =>
+    new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: currency.toUpperCase(),
+    }).format(amount);
+
+  // ✅ Helper to render status badge
   const getStatusBadge = (status: string) => {
     const base = "px-2 py-1 rounded text-white text-xs font-semibold";
     switch (status.toLowerCase()) {
@@ -85,9 +93,8 @@ export default function OrdersList() {
               <strong>Status:</strong> {getStatusBadge(order.status)}
             </p>
             <p>
-              <strong>Amount:</strong> ₹
-              {Number(order.amount).toLocaleString()}{" "}
-              {order.currency.toUpperCase()}
+              <strong>Amount:</strong>{" "}
+              {formatCurrency(Number(order.amount), order.currency)}
             </p>
             <p>
               <strong>Date:</strong>{" "}
@@ -106,30 +113,36 @@ export default function OrdersList() {
                   </tr>
                 </thead>
                 <tbody>
-                  {order.products.map((p, i) => (
-                    <tr key={i} className="hover:bg-gray-50">
-                      <td className="border px-2 py-1">
-                        {p.image ? (
-                          <Image
-                            src={p.image}
-                            alt={p.name}
-                            width={40}
-                            height={40}
-                            className="object-contain rounded"
-                          />
-                        ) : (
-                          <div className="w-10 h-10 bg-gray-200 rounded flex items-center justify-center text-gray-400 text-xs">
-                            N/A
-                          </div>
-                        )}
-                      </td>
-                      <td className="border px-2 py-1">{p.name}</td>
-                      <td className="border px-2 py-1">{p.qty || 1}</td>
-                      <td className="border px-2 py-1">
-                        ₹{Number(p.price).toLocaleString()}
-                      </td>
-                    </tr>
-                  ))}
+                  {order.products.map((p, i) => {
+                    const price = Number(p.price) || 0;
+                    const imageSrc = p.imageUrl || p.image || "/placeholder.png";
+                    return (
+                      <tr key={i} className="hover:bg-gray-50">
+                        <td className="border px-2 py-1">
+                          {imageSrc ? (
+                            <div className="relative w-12 h-12">
+                              <Image
+                                src={imageSrc}
+                                alt={p.name}
+                                fill
+                                className="object-contain rounded"
+                                unoptimized
+                              />
+                            </div>
+                          ) : (
+                            <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center text-gray-400 text-xs">
+                              N/A
+                            </div>
+                          )}
+                        </td>
+                        <td className="border px-2 py-1">{p.name}</td>
+                        <td className="border px-2 py-1">{p.qty || 1}</td>
+                        <td className="border px-2 py-1">
+                          {formatCurrency(price, order.currency)}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

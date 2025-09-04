@@ -11,80 +11,103 @@ export default function CartPage() {
 
   if (cart.length === 0) {
     return (
-      <div className="max-w-4xl mx-auto px-5 py-10 text-center">
-        <h1 className="text-2xl font-bold mb-4">Your Cart is Empty</h1>
-        <p className="text-gray-600">Add some products to your cart.</p>
+      <div className="max-w-5xl mx-auto px-5 py-20 text-center">
+        <h1 className="text-3xl font-bold mb-4">🛒 Your Cart is Empty</h1>
+        <p className="text-gray-600">Browse products and add them to your cart.</p>
+        <button
+          onClick={() => router.push("/")}
+          className="mt-6 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow"
+        >
+          Continue Shopping
+        </button>
       </div>
     );
   }
 
+  const total = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
+
   return (
-    <div className="max-w-4xl mx-auto px-5 py-10">
-      <h1 className="text-3xl font-bold mb-6">Your Cart</h1>
+    <div className="max-w-5xl mx-auto px-5 py-10">
+      <h1 className="text-3xl font-bold mb-8">Your Shopping Cart</h1>
 
-      <ul className="space-y-4">
-        {cart.map((item) => (
-          <li
-            key={item.id}
-            className="flex items-center justify-between bg-gray-100 p-4 rounded-lg shadow"
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-20 h-20 relative">
-                <Image
-                  src={item.imageUrl || "/placeholder.png"}
-                  alt={item.name}
-                  fill
-                  className="object-contain rounded"
-                  unoptimized
-                />
-              </div>
+      <div className="bg-white shadow-md rounded-xl overflow-hidden">
+        <ul className="divide-y divide-gray-200">
+          {cart.map((item) => (
+            <li
+              key={item.id}
+              className="flex flex-col sm:flex-row sm:items-center justify-between p-5 hover:bg-gray-50"
+            >
+              <div className="flex items-center gap-5">
+                {/* ✅ fixed: use item.image instead of imageUrl */}
+                <div className="w-24 h-24 relative flex-shrink-0">
+                  <Image
+                    src={item.imageUrl  || "/placeholder.png"}
+                    alt={item.name}
+                    fill
+                    className="object-contain rounded-md"
+                    unoptimized
+                  />
+                </div>
 
-              <div>
-                <h2 className="font-semibold">{item.name}</h2>
-                <p className="text-red-600 font-bold">
-                  ₹{(item.price * item.quantity).toFixed(2)}
-                </p>
-                <div className="flex items-center gap-2 mt-2">
-                  <button
-                    onClick={() => decreaseQuantity(item.id)}
-                    className="px-2 py-1 bg-gray-300 rounded"
-                  >
-                    -
-                  </button>
-                  <span className="px-3">{item.quantity}</span>
-                  <button
-                    onClick={() => increaseQuantity(item.id)}
-                    className="px-2 py-1 bg-gray-300 rounded"
-                  >
-                    +
-                  </button>
+                <div>
+                  <h2 className="text-lg font-semibold">{item.name}</h2>
+                  <p className="text-gray-600">
+                    Price: ₹{item.price.toFixed(2)}
+                  </p>
+                  <p className="text-red-600 font-bold">
+                    Subtotal: ₹{(item.price * item.quantity).toFixed(2)}
+                  </p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <button
+                      onClick={() => decreaseQuantity(item.id)}
+                      className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
+                    >
+                      -
+                    </button>
+                    <span className="px-3 font-medium">{item.quantity}</span>
+                    <button
+                      onClick={() => increaseQuantity(item.id)}
+                      className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <button
-              onClick={() => removeFromCart(item.id)}
-              className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded"
-            >
-              Remove
-            </button>
-          </li>
-        ))}
-      </ul>
+              <div className="mt-4 sm:mt-0 flex sm:flex-col gap-2">
+                <button
+                  onClick={() => removeFromCart(item.id)}
+                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg shadow"
+                >
+                  Remove
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
 
-      <div className="mt-8 flex justify-between items-center">
+      {/* Cart summary */}
+      <div className="mt-10 flex flex-col sm:flex-row justify-between items-center gap-5">
         <button
           onClick={clearCart}
-          className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded"
+          className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg shadow"
         >
           Clear Cart
         </button>
-        <button
-          className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded"
-          onClick={() => router.push("/checkout")}
-        >
-          Checkout
-        </button>
+
+        <div className="text-right">
+          <p className="text-lg font-semibold">
+            Total: <span className="text-green-600">₹{total.toFixed(2)}</span>
+          </p>
+          <button
+            onClick={() => router.push("/checkout")}
+            className="mt-3 bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg shadow-lg text-lg font-medium"
+          >
+            Proceed to Checkout →
+          </button>
+        </div>
       </div>
     </div>
   );

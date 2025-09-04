@@ -9,7 +9,7 @@ interface OrderItem {
   name: string;
   price: number;
   qty: number;
-  image?: string;
+  image: string; // ✅ unified
   hoverImage?: string;
 }
 
@@ -63,7 +63,6 @@ export default function OrdersPage() {
       }
 
       const data: OrdersApiResponse = await res.json();
-      console.log("Fetched orders:", data.orders);
 
       if (!data.success || !data.orders) {
         setOrders([]);
@@ -71,39 +70,26 @@ export default function OrdersPage() {
         return;
       }
 
+      // ✅ Map correctly (use "image" saved in DB)
       const mappedOrders: Order[] = data.orders.map((o, idx) => ({
         _id: o._id,
         orderId: o.orderId || o._id || `order-${idx}`,
-        products: (o.products || []).map((p: any, i: number) => {
-          const imagePath = p.image?.startsWith("http")
-            ? p.image
-            : p.image
-            ? `/images/${p.image}`
-            : "/placeholder.png";
-          const hoverPath = p.hoverImage?.startsWith("http")
-            ? p.hoverImage
-            : p.hoverImage
-            ? `/images/${p.hoverImage}`
-            : imagePath;
-
-          return {
-            id: p._id || p.id || i,
-            name: p.name || "Unnamed product",
-            price: Number(p.price) || 0,
-            qty: Number(p.qty) || 1,
-            image: imagePath,
-            hoverImage: hoverPath,
-          };
-        }),
+        products: (o.products || []).map((p: any, i: number) => ({
+          id: p._id || p.id || i,
+          name: p.name || "Unnamed product",
+          price: Number(p.price) || 0,
+          qty: Number(p.qty) || 1,
+          image: p.image || "/placeholder.png",
+          hoverImage: p.hoverImage || p.image || "/placeholder.png",
+        })),
         amount: Number(o.amount) || 0,
-        currency: o.currency || "INR",
+        currency: "USD",
         createdAt: o.createdAt,
         status: o.status || "Pending",
       }));
 
       setOrders(mappedOrders);
     } catch (err: any) {
-      console.error(err);
       setError(err.message || "Something went wrong while fetching orders.");
     } finally {
       setLoading(false);
@@ -280,15 +266,15 @@ export default function OrdersPage() {
               >
                 <div className="relative w-[150px] h-[200px]">
                   <Image
-                    src={item.image || "/placeholder.png"} // ✅ always a string
-                    alt={item.name || "Product"}
+                    src={item.image || "/placeholder.png"}
+                    alt={item.name}
                     fill
-                    className="rounded object-cover border transition-opacity duration-300 ease-in-out opacity-100 hover:opacity-0"
+                    className="object-contain rounded"
                     unoptimized
                   />
-                  {item.hoverImage && (
+                  {item.hoverImage && item.hoverImage !== item.image && (
                     <Image
-                      src={item.hoverImage || item.image || "/placeholder.png"} // ✅ fallback chain
+                      src={item.hoverImage}
                       alt={item.name + " hover"}
                       fill
                       className="rounded object-cover border absolute top-0 left-0 opacity-0 hover:opacity-100 transition-opacity duration-300"
@@ -300,11 +286,18 @@ export default function OrdersPage() {
                 <div className="flex-1">
                   <p className="font-medium">{item.name}</p>
                   <p className="text-sm text-gray-600">
-                    Qty: {item.qty} × ₹{item.price}
+                    Qty: {item.qty} ×{" "}
+                    {new Intl.NumberFormat("en-US", {
+                      style: "currency",
+                      currency: "USD",
+                    }).format(item.price)}
                   </p>
                 </div>
                 <p className="font-semibold">
-                  ₹{(item.price * item.qty).toFixed(2)}
+                  {new Intl.NumberFormat("en-US", {
+                    style: "currency",
+                    currency: "USD",
+                  }).format(item.price * item.qty)}
                 </p>
               </div>
             ))}
@@ -313,9 +306,9 @@ export default function OrdersPage() {
             <div className="border-t pt-3 flex justify-between items-center mt-2">
               <span className="font-medium">Total Amount:</span>
               <span className="font-bold text-lg">
-                {new Intl.NumberFormat("en-IN", {
+                {new Intl.NumberFormat("en-US", {
                   style: "currency",
-                  currency: order.currency,
+                  currency: "USD",
                 }).format(order.amount)}
               </span>
             </div>

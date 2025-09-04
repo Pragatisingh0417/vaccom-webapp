@@ -52,6 +52,8 @@ export default function CheckoutForm() {
             name: item.name,
             price: item.price,
             qty: item.quantity, // ✅ matches your model's `qty`
+                image: item.imageUrl || item.imageUrl  || "/placeholder.png", // <-- ADD THIS
+
           })),
           amount,
           currency: "usd",

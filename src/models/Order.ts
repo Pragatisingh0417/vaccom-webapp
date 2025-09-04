@@ -1,7 +1,7 @@
 // models/Order.ts
 import mongoose from "mongoose";
 import { v4 as uuidv4 } from "uuid";
-import "@/models/User"; // ⚠️ important: load User model first
+import "@/models/User"; 
 
 
 const OrderSchema = new mongoose.Schema({
@@ -17,7 +17,7 @@ const OrderSchema = new mongoose.Schema({
       name: { type: String, required: true },
       price: { type: Number, required: true },
       qty: { type: Number, required: true },
-      image: { type: String, default: "/placeholder.png" }, // ✅ add image here
+      image: { type: String, default: "/placeholder.png" }, 
     },
   ],
   amount: { type: Number, required: true },

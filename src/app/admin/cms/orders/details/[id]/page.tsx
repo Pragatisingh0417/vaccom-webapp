@@ -13,6 +13,7 @@ interface OrderDetail {
     name: string;
     price: number | string;
     qty?: number | string;
+    imageUrl?: string;
     image?: string;
   }[];
   amount: number | string;
@@ -43,6 +44,13 @@ export default function AdminOrderDetailsPage() {
   if (loading) return <p>Loading order details...</p>;
   if (!order) return <p>Order not found.</p>;
 
+  // ✅ Currency formatter
+  const formatCurrency = (amount: number, currency: string) =>
+    new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: currency.toUpperCase(),
+    }).format(amount);
+
   // Helper to render status badges
   const getStatusBadge = (status: string) => {
     const baseClasses = "px-2 py-1 rounded text-white text-sm font-semibold";
@@ -70,10 +78,12 @@ export default function AdminOrderDetailsPage() {
         <strong>Status:</strong> {getStatusBadge(order.status)}
       </p>
       <p>
-        <strong>Amount:</strong> ₹{Number(order.amount).toLocaleString()} {order.currency.toUpperCase()}
+        <strong>Amount:</strong>{" "}
+        {formatCurrency(Number(order.amount), order.currency)}
       </p>
       <p>
-        <strong>Created At:</strong> {new Date(order.createdAt).toLocaleString()}
+        <strong>Created At:</strong>{" "}
+        {new Date(order.createdAt).toLocaleString()}
       </p>
 
       <h2 className="text-xl font-semibold mt-6 mb-2">Products</h2>
@@ -112,9 +122,13 @@ export default function AdminOrderDetailsPage() {
                     )}
                   </td>
                   <td className="border px-4 py-2">{p.name}</td>
-                  <td className="border px-4 py-2">₹{price.toLocaleString()}</td>
+                  <td className="border px-4 py-2">
+                    {formatCurrency(price, order.currency)}
+                  </td>
                   <td className="border px-4 py-2">{qty}</td>
-                  <td className="border px-4 py-2 font-semibold">₹{total.toLocaleString()}</td>
+                  <td className="border px-4 py-2 font-semibold">
+                    {formatCurrency(total, order.currency)}
+                  </td>
                 </tr>
               );
             })}
