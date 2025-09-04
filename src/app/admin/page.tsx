@@ -1,6 +1,9 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import * as jwtDecode from "jwt-decode";
+
 import Allorder from "../admin/cms/orders/page";
 import AddProductPage from "./cms/add-product/page";
 import ProductListPage from "./cms/product-list/page";
@@ -11,6 +14,7 @@ import CreateBlogPage from "./cms/blogs/create/page";
 import TransactionPage from "./cms/transaction/page";
 import TopCleaningBrands from "../components/TopCleaningBrands";
 import OrdersList from "./cms/orders/orders-list/OrdersList";
+
 import {
   LineChart,
   Line,
@@ -23,6 +27,7 @@ import {
   CartesianGrid,
   Legend,
 } from "recharts";
+
 import {
   ArrowLeftRight,
   ChevronDown,
@@ -39,6 +44,8 @@ import {
 } from "lucide-react";
 
 export default function AdminDashboard() {
+  const router = useRouter();
+  const [role, setRole] = useState<string>("superadmin");
   const [revenueData, setRevenueData] = useState<any[]>([]);
   const [visitorsData, setVisitorsData] = useState<any[]>([]);
   const [topProducts, setTopProducts] = useState<any[]>([]);
@@ -46,6 +53,22 @@ export default function AdminDashboard() {
   const [collapsed, setCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState("dashboard");
 
+  // Protect route and get role from token
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return router.push("/admin/login");
+
+    try {
+const decoded: any = (jwtDecode as any).default(token);
+      setRole(decoded.role);
+    } catch (err) {
+      console.error("Invalid token");
+      localStorage.removeItem("token");
+      router.push("/admin/login");
+    }
+  }, []);
+
+  // Fetch dashboard data
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -54,7 +77,6 @@ export default function AdminDashboard() {
           fetch("/api/admin/visitors"),
           fetch("/api/admin/top-products"),
         ]);
-
         setRevenueData(await revenueRes.json());
         setVisitorsData(await visitorsRes.json());
         setTopProducts(await productsRes.json());
@@ -82,12 +104,52 @@ export default function AdminDashboard() {
   );
   const topProductName = topProducts[0]?.name || "-";
 
+  // Role-based access
+  const hasAccess = (module: string) => {
+    const accessMatrix: Record<string, string[]> = {
+      products: ["superadmin", "product_manager"],
+      orders: ["superadmin", "order_manager"],
+      transactions: ["superadmin", "order_manager"],
+      coupons: ["superadmin", "marketing_manager"],
+      blogs: ["superadmin", "marketing_manager"],
+      users: ["superadmin"],
+    };
+    return accessMatrix[module]?.includes(role);
+  };
+
+  useEffect(() => {
+    if (
+      (activeTab === "add-product" || activeTab === "product-list") &&
+      !hasAccess("products")
+    )
+      setActiveTab("dashboard");
+    if (
+      (activeTab === "orders" || activeTab === "orders-list") &&
+      !hasAccess("orders")
+    )
+      setActiveTab("dashboard");
+    if (activeTab === "transactions" && !hasAccess("transactions"))
+      setActiveTab("dashboard");
+    if (
+      (activeTab === "add-coupon" || activeTab === "view-coupons") &&
+      !hasAccess("coupons")
+    )
+      setActiveTab("dashboard");
+    if (
+      (activeTab === "admin/cms/blogs/create" || activeTab === "blogs") &&
+      !hasAccess("blogs")
+    )
+      setActiveTab("dashboard");
+    if (activeTab === "users" && !hasAccess("users")) setActiveTab("dashboard");
+  }, [activeTab, role]);
+
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Sidebar */}
       <aside
-        className={`bg-white/90 backdrop-blur-md border-r shadow-md hidden md:flex flex-col transition-all duration-300
-          ${collapsed ? "w-20" : "w-48"} fixed top-0 left-0 h-screen z-50`}
+        className={`bg-white/90 backdrop-blur-md border-r shadow-md hidden md:flex flex-col transition-all duration-300 ${
+          collapsed ? "w-20" : "w-48"
+        } fixed top-0 left-0 h-screen z-50`}
       >
         <div className="flex items-center justify-between p-4 border-b">
           {!collapsed && (
@@ -111,62 +173,78 @@ export default function AdminDashboard() {
             active={activeTab === "dashboard"}
             collapsed={collapsed}
           />
-          <Dropdown
-            label="Products"
-            menu="products"
-            openMenu={openMenu}
-            toggleMenu={toggleMenu}
-            items={[
-              { label: "Add Product", value: "add-product" },
-              { label: "Product List", value: "product-list" },
-            ]}
-            onSelect={(val: string) => setActiveTab(val)}
-            collapsed={collapsed}
-          />
-          <Dropdown
-            label="Orders"
-            menu="orders"
-            openMenu={openMenu}
-            toggleMenu={toggleMenu}
-            items={[
-              { label: "Orders", value: "orders" },
-              { label: "Orders List", value: "orders-list" },
-            ]}
-            onSelect={(val: string) => setActiveTab(val)}
-            collapsed={collapsed}
-          />
-          <Dropdown
-            label="Blogs"
-            menu="blogs"
-            openMenu={openMenu}
-            toggleMenu={toggleMenu}
-            items={[
-              { label: "Add Blog", value: "admin/cms/blogs/create" },
-              { label: "View Blogs", value: "blogs" },
-            ]}
-            onSelect={(val: string) => setActiveTab(val)}
-            collapsed={collapsed}
-          />
-          <NavLink
-            onClick={() => setActiveTab("transactions")}
-            label="Transactions"
-            icon={<ArrowLeftRight />}
-            active={activeTab === "transactions"}
-            collapsed={collapsed}
-          />
-          <Dropdown
-            label="Coupons"
-            icon={<Ticket />}
-            menu="Coupons"
-            openMenu={openMenu}
-            toggleMenu={toggleMenu}
-            items={[
-              { label: "Add Coupon", value: "add-coupon" },
-              { label: "View Coupons", value: "view-coupons" },
-            ]}
-            onSelect={(val: string) => setActiveTab(val)}
-            collapsed={collapsed}
-          />
+
+          {hasAccess("products") && (
+            <Dropdown
+              label="Products"
+              menu="products"
+              openMenu={openMenu}
+              toggleMenu={toggleMenu}
+              items={[
+                { label: "Add Product", value: "add-product" },
+                { label: "Product List", value: "product-list" },
+              ]}
+              onSelect={(val: string) => setActiveTab(val)}
+              collapsed={collapsed}
+            />
+          )}
+
+          {hasAccess("orders") && (
+            <Dropdown
+              label="Orders"
+              menu="orders"
+              openMenu={openMenu}
+              toggleMenu={toggleMenu}
+              items={[
+                { label: "Orders", value: "orders" },
+                { label: "Orders List", value: "orders-list" },
+              ]}
+              onSelect={(val: string) => setActiveTab(val)}
+              collapsed={collapsed}
+            />
+          )}
+
+          {hasAccess("blogs") && (
+            <Dropdown
+              label="Blogs"
+              menu="blogs"
+              openMenu={openMenu}
+              toggleMenu={toggleMenu}
+              items={[
+                { label: "Add Blog", value: "admin/cms/blogs/create" },
+                { label: "View Blogs", value: "blogs" },
+              ]}
+              onSelect={(val: string) => setActiveTab(val)}
+              collapsed={collapsed}
+            />
+          )}
+
+          {hasAccess("transactions") && (
+            <NavLink
+              onClick={() => setActiveTab("transactions")}
+              label="Transactions"
+              icon={<ArrowLeftRight />}
+              active={activeTab === "transactions"}
+              collapsed={collapsed}
+            />
+          )}
+
+          {hasAccess("coupons") && (
+            <Dropdown
+              label="Coupons"
+              icon={<Ticket />}
+              menu="coupons"
+              openMenu={openMenu}
+              toggleMenu={toggleMenu}
+              items={[
+                { label: "Add Coupon", value: "add-coupon" },
+                { label: "View Coupons", value: "view-coupons" },
+              ]}
+              onSelect={(val: string) => setActiveTab(val)}
+              collapsed={collapsed}
+            />
+          )}
+
           <NavLink
             onClick={() => setActiveTab("TopCleaningBrands")}
             label="Brands"
@@ -174,15 +252,23 @@ export default function AdminDashboard() {
             active={activeTab === "TopCleaningBrands"}
             collapsed={collapsed}
           />
+
+          {hasAccess("users") && (
+            <NavLink
+              onClick={() => setActiveTab("users")}
+              label="Users"
+              icon={<Users />}
+              active={activeTab === "users"}
+              collapsed={collapsed}
+            />
+          )}
+
+          {/* Logout */}
           <NavLink
-            onClick={() => setActiveTab("users")}
-            label="Users"
-            icon={<Users />}
-            active={activeTab === "users"}
-            collapsed={collapsed}
-          />
-          <NavLink
-            onClick={() => setActiveTab("logout")}
+            onClick={() => {
+              localStorage.removeItem("token");
+              router.push("/admin/login");
+            }}
             label="Logout"
             icon={<LogOut />}
             active={activeTab === "logout"}
@@ -192,34 +278,13 @@ export default function AdminDashboard() {
       </aside>
 
       {/* Main Content */}
-      <main className={`flex-1 p-6 transition-all duration-300 ${collapsed ? "ml-20" : "ml-48"}`}>
-        {/* Header */}
-        <header className="flex justify-between items-center mb-6 bg-white/70 backdrop-blur-md rounded-xl shadow-sm px-4 py-3">
-          <div>
-            <p className="text-sm text-gray-400">Dashboard / {activeTab}</p>
-            <h1 className="text-2xl font-bold text-gray-800 capitalize">
-              {activeTab}
-            </h1>
-          </div>
-          <div className="flex items-center space-x-4">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search..."
-                className="pl-8 pr-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500"
-              />
-              <Search className="w-4 h-4 text-gray-400 absolute left-2 top-2.5" />
-            </div>
-            <Bell className="w-5 h-5 text-gray-600 cursor-pointer" />
-            <img
-              src="/user-avatar.png"
-              alt="User"
-              className="w-10 h-10 rounded-full border"
-            />
-          </div>
-        </header>
+      <main
+        className={`flex-1 p-6 transition-all duration-300 ${
+          collapsed ? "ml-20" : "ml-48"
+        }`}
+      >
+        <Header activeTab={activeTab} />
 
-        {/* Content */}
         {activeTab === "dashboard" && (
           <DashboardContent
             revenueData={revenueData}
@@ -231,23 +296,46 @@ export default function AdminDashboard() {
             topProductName={topProductName}
           />
         )}
-        {activeTab === "add-product" && <AddProductPage />}
-        {activeTab === "product-list" && <ProductListPage />}
-        {activeTab === "orders" && <Allorder />}
-        {activeTab === "orders-list" && <OrdersList />}
-        {activeTab === "admin/cms/blogs/create" && <CreateBlogPage />}
-        {activeTab === "blogs" && <BlogListPage />}
-        {activeTab === "transactions" && <TransactionPage />}
+        {activeTab === "add-product" && hasAccess("products") && <AddProductPage />}
+        {activeTab === "product-list" && hasAccess("products") && <ProductListPage />}
+        {activeTab === "orders" && hasAccess("orders") && <Allorder />}
+        {activeTab === "orders-list" && hasAccess("orders") && <OrdersList />}
+        {activeTab === "admin/cms/blogs/create" && hasAccess("blogs") && <CreateBlogPage />}
+        {activeTab === "blogs" && hasAccess("blogs") && <BlogListPage />}
+        {activeTab === "transactions" && hasAccess("transactions") && <TransactionPage />}
         {activeTab === "TopCleaningBrands" && <TopCleaningBrands />}
-        {activeTab === "add-coupon" && <AddCoupon />}
-        {activeTab === "view-coupons" && <ViewCoupons />}
-        {activeTab === "users" && <TabContent title="Users" />}
+        {activeTab === "add-coupon" && hasAccess("coupons") && <AddCoupon />}
+        {activeTab === "view-coupons" && hasAccess("coupons") && <ViewCoupons />}
+        {activeTab === "users" && hasAccess("users") && <TabContent title="Users" />}
       </main>
     </div>
   );
 }
 
-/* Tab Content Placeholder */
+/* ------------------- Other Components (unchanged) ------------------- */
+function Header({ activeTab }: { activeTab: string }) {
+  return (
+    <header className="flex justify-between items-center mb-6 bg-white/70 backdrop-blur-md rounded-xl shadow-sm px-4 py-3">
+      <div>
+        <p className="text-sm text-gray-400">Dashboard / {activeTab}</p>
+        <h1 className="text-2xl font-bold text-gray-800 capitalize">{activeTab}</h1>
+      </div>
+      <div className="flex items-center space-x-4">
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Search..."
+            className="pl-8 pr-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500"
+          />
+          <Search className="w-4 h-4 text-gray-400 absolute left-2 top-2.5" />
+        </div>
+        <Bell className="w-5 h-5 text-gray-600 cursor-pointer" />
+        <img src="/user-avatar.png" alt="User" className="w-10 h-10 rounded-full border" />
+      </div>
+    </header>
+  );
+}
+
 function TabContent({ title }: { title: string }) {
   return (
     <div className="text-center mt-20 text-xl font-semibold text-gray-700">
@@ -256,7 +344,6 @@ function TabContent({ title }: { title: string }) {
   );
 }
 
-/* NavLink */
 function NavLink({ onClick, label, icon, active = false, collapsed }: any) {
   return (
     <button
@@ -273,17 +360,7 @@ function NavLink({ onClick, label, icon, active = false, collapsed }: any) {
   );
 }
 
-/* Dropdown */
-function Dropdown({
-  label,
-  menu,
-  openMenu,
-  toggleMenu,
-  items,
-  onSelect,
-  collapsed,
-  icon,
-}: any) {
+function Dropdown({ label, menu, openMenu, toggleMenu, items, onSelect, collapsed, icon }: any) {
   const isOpen = openMenu === menu;
   return (
     <div>
@@ -300,11 +377,7 @@ function Dropdown({
           {icon || <Package className="w-4 h-4" />} {!collapsed && label}
         </span>
         {!collapsed && (
-          <ChevronDown
-            className={`w-4 h-4 transition-transform ${
-              isOpen ? "rotate-180" : ""
-            }`}
-          />
+          <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? "rotate-180" : ""}`} />
         )}
       </button>
 
@@ -326,16 +399,7 @@ function Dropdown({
   );
 }
 
-/* Dashboard Content */
-function DashboardContent({
-  revenueData,
-  visitorsData,
-  topProducts,
-  totalRevenue,
-  totalEarnings,
-  totalVisitors,
-  topProductName,
-}: any) {
+function DashboardContent({ revenueData, visitorsData, topProducts, totalRevenue, totalEarnings, totalVisitors, topProductName }: any) {
   return (
     <>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -388,7 +452,6 @@ function DashboardContent({
   );
 }
 
-/* KPI Card */
 function KPI({ title, value, color }: { title: string; value: string; color: string }) {
   return (
     <div className="bg-white p-6 rounded-2xl shadow hover:shadow-lg transition transform hover:-translate-y-1 border border-gray-100">
@@ -400,7 +463,6 @@ function KPI({ title, value, color }: { title: string; value: string; color: str
   );
 }
 
-/* Chart Card */
 function ChartCard({ title, children }: any) {
   return (
     <div className="bg-white/90 backdrop-blur-md p-6 rounded-2xl shadow-md border border-gray-100 mb-6">
