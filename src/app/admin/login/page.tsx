@@ -26,11 +26,9 @@ export default function AdminLoginPage() {
         return;
       }
 
-      // Save token + role in localStorage
-      localStorage.setItem("adminToken", data.token);
-      localStorage.setItem("adminRole", data.role);
-
-      // Redirect to admin dashboard
+      // ✅ Do NOT save token in localStorage
+      // Cookie is already set by backend (httpOnly)
+      // Just redirect
       router.push("/admin");
     } catch (err) {
       setError("Something went wrong");
@@ -73,7 +71,10 @@ export default function AdminLoginPage() {
         </button>
 
         <p className="text-sm mt-4 text-center">
-          <a href="/admin/forgot-password" className="text-blue-600 hover:underline">
+          <a
+            href="/admin/forgot-password"
+            className="text-blue-600 hover:underline"
+          >
             Forgot Password?
           </a>
         </p>

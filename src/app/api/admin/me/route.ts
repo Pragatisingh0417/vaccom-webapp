@@ -1,20 +1,47 @@
+// /app/api/admin/me/route.ts
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
-import Admin from "@/models/Admin";
-import { connectToDatabase } from "@/app/lib/mongodb";
+
+const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
 export async function GET(req: Request) {
   try {
-    await connectToDatabase();
-    const token = req.headers.get("authorization")?.split(" ")[1];
-    if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // 1️⃣ Read cookies
+    const cookieHeader = req.headers.get("cookie") || "";
+    const cookies = Object.fromEntries(
+      cookieHeader.split(";").map(c => {
+        const [key, ...val] = c.trim().split("=");
+        return [key, decodeURIComponent(val.join("="))];
+      })
+    );
 
-    const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
-    const admin = await Admin.findById(decoded.id).select("-password");
-    if (!admin) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    const token = cookies.adminToken;
+    if (!token) {
+      return NextResponse.json(
+        { success: false, error: "Not authenticated" },
+        { status: 401 }
+      );
+    }
 
-    return NextResponse.json(admin);
+    // 2️⃣ Verify JWT
+    const decoded = jwt.verify(token, JWT_SECRET) as {
+      id: string;
+      email: string;
+      role: string;
+    };
+
+    // 3️⃣ ✅ Return role for any admin (not just superadmin)
+    return NextResponse.json({
+      success: true,
+      email: decoded.email,
+      role: decoded.role,
+    });
+
   } catch (err) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    console.error("❌ /api/admin/me error:", err);
+    return NextResponse.json(
+      { success: false, error: "Invalid or expired token" },
+      { status: 401 }
+    );
   }
 }

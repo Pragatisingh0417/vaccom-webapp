@@ -1,10 +1,8 @@
 "use client";
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import * as jwtDecode from "jwt-decode";
 
-import Allorder from "../admin/cms/orders/page";
+import Allorder from "./cms/orders/page";
 import AddProductPage from "./cms/add-product/page";
 import ProductListPage from "./cms/product-list/page";
 import AddCoupon from "./cms/add-coupon/page";
@@ -14,7 +12,8 @@ import CreateBlogPage from "./cms/blogs/create/page";
 import TransactionPage from "./cms/transaction/page";
 import TopCleaningBrands from "../components/TopCleaningBrands";
 import OrdersList from "./cms/orders/orders-list/OrdersList";
-
+import AllUsersPage from "./cms/all-users/page";
+import CreateAdminPage from "./create-admin/page";
 import {
   LineChart,
   Line,
@@ -41,11 +40,13 @@ import {
   Ticket,
   LogOut,
   Search,
+  UserPlus,
 } from "lucide-react";
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const [role, setRole] = useState<string>("superadmin");
+  const [role, setRole] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const [revenueData, setRevenueData] = useState<any[]>([]);
   const [visitorsData, setVisitorsData] = useState<any[]>([]);
   const [topProducts, setTopProducts] = useState<any[]>([]);
@@ -53,29 +54,33 @@ export default function AdminDashboard() {
   const [collapsed, setCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState("dashboard");
 
-  // Protect route and get role from token
+  // Fetch session and role
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) return router.push("/admin/login");
-
-    try {
-const decoded: any = (jwtDecode as any).default(token);
-      setRole(decoded.role);
-    } catch (err) {
-      console.error("Invalid token");
-      localStorage.removeItem("token");
-      router.push("/admin/login");
-    }
-  }, []);
+    const verifySession = async () => {
+      try {
+        const res = await fetch("/api/admin/me", { credentials: "include" });
+        if (!res.ok) throw new Error("Not authenticated");
+        const data = await res.json();
+        setRole(data.role || "admin");
+      } catch (err) {
+        console.error("Auth check failed:", err);
+        router.push("/admin/login");
+      } finally {
+        setLoading(false);
+      }
+    };
+    verifySession();
+  }, [router]);
 
   // Fetch dashboard data
   useEffect(() => {
+    if (!role) return;
     const fetchData = async () => {
       try {
         const [revenueRes, visitorsRes, productsRes] = await Promise.all([
-          fetch("/api/admin/revenue"),
-          fetch("/api/admin/visitors"),
-          fetch("/api/admin/top-products"),
+          fetch("/api/admin/revenue", { credentials: "include" }),
+          fetch("/api/admin/visitors", { credentials: "include" }),
+          fetch("/api/admin/top-products", { credentials: "include" }),
         ]);
         setRevenueData(await revenueRes.json());
         setVisitorsData(await visitorsRes.json());
@@ -85,7 +90,7 @@ const decoded: any = (jwtDecode as any).default(token);
       }
     };
     fetchData();
-  }, []);
+  }, [role]);
 
   const toggleMenu = (menu: string) =>
     setOpenMenu(openMenu === menu ? null : menu);
@@ -104,44 +109,49 @@ const decoded: any = (jwtDecode as any).default(token);
   );
   const topProductName = topProducts[0]?.name || "-";
 
-  // Role-based access
+  // ----------------- Role-based access -----------------
   const hasAccess = (module: string) => {
+    if (!role) return false;
+
     const accessMatrix: Record<string, string[]> = {
+      dashboard: [
+        "superadmin",
+        "product_manager",
+        "order_manager",
+        "marketing_manager",
+      ],
       products: ["superadmin", "product_manager"],
+      "add-product": ["superadmin", "product_manager"],
+      "product-list": ["superadmin", "product_manager"],
       orders: ["superadmin", "order_manager"],
+      "orders-list": ["superadmin", "order_manager"],
       transactions: ["superadmin", "order_manager"],
       coupons: ["superadmin", "marketing_manager"],
+      "add-coupon": ["superadmin", "marketing_manager"],
+      "view-coupons": ["superadmin", "marketing_manager"],
       blogs: ["superadmin", "marketing_manager"],
+      "admin/cms/blogs/create": ["superadmin", "marketing_manager"],
       users: ["superadmin"],
+      "create-admin": ["superadmin"],
+      TopCleaningBrands: [
+        "superadmin",
+        "product_manager",
+        "order_manager",
+        "marketing_manager",
+      ],
     };
+
     return accessMatrix[module]?.includes(role);
   };
+  // ------------------------------------------------------
 
-  useEffect(() => {
-    if (
-      (activeTab === "add-product" || activeTab === "product-list") &&
-      !hasAccess("products")
-    )
-      setActiveTab("dashboard");
-    if (
-      (activeTab === "orders" || activeTab === "orders-list") &&
-      !hasAccess("orders")
-    )
-      setActiveTab("dashboard");
-    if (activeTab === "transactions" && !hasAccess("transactions"))
-      setActiveTab("dashboard");
-    if (
-      (activeTab === "add-coupon" || activeTab === "view-coupons") &&
-      !hasAccess("coupons")
-    )
-      setActiveTab("dashboard");
-    if (
-      (activeTab === "admin/cms/blogs/create" || activeTab === "blogs") &&
-      !hasAccess("blogs")
-    )
-      setActiveTab("dashboard");
-    if (activeTab === "users" && !hasAccess("users")) setActiveTab("dashboard");
-  }, [activeTab, role]);
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen text-lg">
+        Loading...
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -153,7 +163,7 @@ const decoded: any = (jwtDecode as any).default(token);
       >
         <div className="flex items-center justify-between p-4 border-b">
           {!collapsed && (
-            <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <h2 className="text-3xl font-bold bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent">
               Vacoom
             </h2>
           )}
@@ -161,7 +171,11 @@ const decoded: any = (jwtDecode as any).default(token);
             onClick={() => setCollapsed(!collapsed)}
             className="p-2 rounded hover:bg-gray-100"
           >
-            {collapsed ? <Menu className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
+            {collapsed ? (
+              <Menu className="w-5 h-5" />
+            ) : (
+              <ChevronLeft className="w-5 h-5" />
+            )}
           </button>
         </div>
 
@@ -263,11 +277,24 @@ const decoded: any = (jwtDecode as any).default(token);
             />
           )}
 
-          {/* Logout */}
+          {hasAccess("create-admin") && (
+            <NavLink
+              onClick={() => setActiveTab("create-admin")}
+              label="Create Admin"
+              icon={<UserPlus />}
+              active={activeTab === "create-admin"}
+              collapsed={collapsed}
+            />
+          )}
+
           <NavLink
-            onClick={() => {
-              localStorage.removeItem("token");
-              router.push("/admin/login");
+            onClick={async () => {
+              try {
+                await fetch("/api/admin/logout", { method: "POST" });
+                router.push("/admin/login");
+              } catch (err) {
+                console.error("Logout failed:", err);
+              }
             }}
             label="Logout"
             icon={<LogOut />}
@@ -283,7 +310,14 @@ const decoded: any = (jwtDecode as any).default(token);
           collapsed ? "ml-20" : "ml-48"
         }`}
       >
-        <Header activeTab={activeTab} />
+        <Header activeTab={activeTab} role={role} collapsed={collapsed} />
+
+        {/* --------------------- Main Pages --------------------- */}
+        {!hasAccess(activeTab) && activeTab !== "dashboard" && (
+          <div className="text-center mt-20 text-xl font-semibold text-red-500">
+            You are not authorized to view this page.
+          </div>
+        )}
 
         {activeTab === "dashboard" && (
           <DashboardContent
@@ -296,29 +330,57 @@ const decoded: any = (jwtDecode as any).default(token);
             topProductName={topProductName}
           />
         )}
-        {activeTab === "add-product" && hasAccess("products") && <AddProductPage />}
-        {activeTab === "product-list" && hasAccess("products") && <ProductListPage />}
+
+        {activeTab === "add-product" && hasAccess("add-product") && (
+          <AddProductPage />
+        )}
+        {activeTab === "product-list" && hasAccess("product-list") && (
+          <ProductListPage />
+        )}
         {activeTab === "orders" && hasAccess("orders") && <Allorder />}
-        {activeTab === "orders-list" && hasAccess("orders") && <OrdersList />}
-        {activeTab === "admin/cms/blogs/create" && hasAccess("blogs") && <CreateBlogPage />}
+        {activeTab === "orders-list" && hasAccess("orders-list") && (
+          <OrdersList />
+        )}
+        {activeTab === "admin/cms/blogs/create" &&
+          hasAccess("admin/cms/blogs/create") && <CreateBlogPage />}
         {activeTab === "blogs" && hasAccess("blogs") && <BlogListPage />}
-        {activeTab === "transactions" && hasAccess("transactions") && <TransactionPage />}
-        {activeTab === "TopCleaningBrands" && <TopCleaningBrands />}
-        {activeTab === "add-coupon" && hasAccess("coupons") && <AddCoupon />}
-        {activeTab === "view-coupons" && hasAccess("coupons") && <ViewCoupons />}
-        {activeTab === "users" && hasAccess("users") && <TabContent title="Users" />}
+        {activeTab === "transactions" && hasAccess("transactions") && (
+          <TransactionPage />
+        )}
+       
+        {activeTab === "TopCleaningBrands" &&
+          hasAccess("TopCleaningBrands") && <TopCleaningBrands />}
+        {activeTab === "add-coupon" && hasAccess("add-coupon") && <AddCoupon />}
+        {activeTab === "view-coupons" && hasAccess("view-coupons") && (
+          <ViewCoupons />
+        )}
+        {/* {activeTab === "users" && hasAccess("users") && <TabContent title="Users" />} */}
+        {activeTab === "users" && hasAccess("users") && <AllUsersPage />}
+         {activeTab === "create-admin" && hasAccess("create-admin") && (
+          <CreateAdminPage />
+        )}
       </main>
     </div>
   );
 }
 
-/* ------------------- Other Components (unchanged) ------------------- */
-function Header({ activeTab }: { activeTab: string }) {
+/* ------------------- Supporting Components ------------------- */
+function Header({
+  activeTab,
+  role,
+  collapsed,
+}: {
+  activeTab: string;
+  role: string | null;
+  collapsed: boolean;
+}) {
   return (
     <header className="flex justify-between items-center mb-6 bg-white/70 backdrop-blur-md rounded-xl shadow-sm px-4 py-3">
       <div>
         <p className="text-sm text-gray-400">Dashboard / {activeTab}</p>
-        <h1 className="text-2xl font-bold text-gray-800 capitalize">{activeTab}</h1>
+        <h1 className="text-2xl font-bold text-gray-800 capitalize">
+          {activeTab}
+        </h1>
       </div>
       <div className="flex items-center space-x-4">
         <div className="relative">
@@ -330,11 +392,24 @@ function Header({ activeTab }: { activeTab: string }) {
           <Search className="w-4 h-4 text-gray-400 absolute left-2 top-2.5" />
         </div>
         <Bell className="w-5 h-5 text-gray-600 cursor-pointer" />
-        <img src="/user-avatar.png" alt="User" className="w-10 h-10 rounded-full border" />
+        <div className="flex items-center gap-2">
+          <img
+            src="/images/admin-png.svg"
+            alt="User"
+            className="w-10 h-10 rounded-full border"
+          />
+          {!collapsed && (
+            <span className="text-gray-700 font-medium">{role || "Admin"}</span>
+          )}
+        </div>
       </div>
     </header>
   );
 }
+
+/* ------------------- NavLink, Dropdown, DashboardContent, KPI, ChartCard, TabContent remain the same ------------------- */
+
+/* ------------------- Other Components (NavLink, Dropdown, DashboardContent etc.) remain the same ------------------- */
 
 function TabContent({ title }: { title: string }) {
   return (
@@ -350,7 +425,7 @@ function NavLink({ onClick, label, icon, active = false, collapsed }: any) {
       onClick={onClick}
       className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all w-full text-left ${
         active
-          ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white font-medium shadow"
+          ? "bg-gradient-to-r from-red-900 to-red-500 text-white font-medium shadow"
           : "text-gray-700 hover:bg-gray-100 hover:text-blue-600"
       } ${collapsed ? "justify-center" : ""}`}
       title={collapsed ? label : ""}
@@ -360,7 +435,16 @@ function NavLink({ onClick, label, icon, active = false, collapsed }: any) {
   );
 }
 
-function Dropdown({ label, menu, openMenu, toggleMenu, items, onSelect, collapsed, icon }: any) {
+function Dropdown({
+  label,
+  menu,
+  openMenu,
+  toggleMenu,
+  items,
+  onSelect,
+  collapsed,
+  icon,
+}: any) {
   const isOpen = openMenu === menu;
   return (
     <div>
@@ -368,7 +452,7 @@ function Dropdown({ label, menu, openMenu, toggleMenu, items, onSelect, collapse
         onClick={() => toggleMenu(menu)}
         className={`flex justify-between w-full px-3 py-2 rounded-xl transition-all ${
           isOpen
-            ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow font-medium"
+            ? "bg-gradient-to-r from-red-800 to-red-500 text-white shadow font-medium"
             : "text-gray-700 hover:bg-gray-100 hover:text-blue-600"
         } ${collapsed ? "justify-center" : ""}`}
         title={collapsed ? label : ""}
@@ -377,7 +461,11 @@ function Dropdown({ label, menu, openMenu, toggleMenu, items, onSelect, collapse
           {icon || <Package className="w-4 h-4" />} {!collapsed && label}
         </span>
         {!collapsed && (
-          <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+          <ChevronDown
+            className={`w-4 h-4 transition-transform ${
+              isOpen ? "rotate-180" : ""
+            }`}
+          />
         )}
       </button>
 
@@ -399,14 +487,38 @@ function Dropdown({ label, menu, openMenu, toggleMenu, items, onSelect, collapse
   );
 }
 
-function DashboardContent({ revenueData, visitorsData, topProducts, totalRevenue, totalEarnings, totalVisitors, topProductName }: any) {
+function DashboardContent({
+  revenueData,
+  visitorsData,
+  topProducts,
+  totalRevenue,
+  totalEarnings,
+  totalVisitors,
+  topProductName,
+}: any) {
   return (
     <>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <KPI title="Revenue" value={`$${totalRevenue}`} color="from-blue-500 to-blue-600" />
-        <KPI title="Earnings" value={`$${totalEarnings}`} color="from-green-500 to-green-600" />
-        <KPI title="Visitors" value={`${totalVisitors}`} color="from-yellow-500 to-yellow-600" />
-        <KPI title="Top Product" value={topProductName} color="from-purple-500 to-purple-600" />
+        <KPI
+          title="Revenue"
+          value={`$${totalRevenue}`}
+          color="from-blue-500 to-blue-600"
+        />
+        <KPI
+          title="Earnings"
+          value={`$${totalEarnings}`}
+          color="from-green-500 to-green-600"
+        />
+        <KPI
+          title="Visitors"
+          value={`${totalVisitors}`}
+          color="from-yellow-500 to-yellow-600"
+        />
+        <KPI
+          title="Top Product"
+          value={topProductName}
+          color="from-purple-500 to-purple-600"
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
@@ -418,8 +530,18 @@ function DashboardContent({ revenueData, visitorsData, topProducts, totalRevenue
               <YAxis />
               <Tooltip />
               <Legend />
-              <Line type="monotone" dataKey="revenue" stroke="#3b82f6" strokeWidth={3} />
-              <Line type="monotone" dataKey="earnings" stroke="#10b981" strokeWidth={3} />
+              <Line
+                type="monotone"
+                dataKey="revenue"
+                stroke="#3b82f6"
+                strokeWidth={3}
+              />
+              <Line
+                type="monotone"
+                dataKey="earnings"
+                stroke="#10b981"
+                strokeWidth={3}
+              />
             </LineChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -431,7 +553,12 @@ function DashboardContent({ revenueData, visitorsData, topProducts, totalRevenue
               <XAxis dataKey="time" />
               <YAxis />
               <Tooltip />
-              <Line type="monotone" dataKey="visitors" stroke="#f59e0b" strokeWidth={3} />
+              <Line
+                type="monotone"
+                dataKey="visitors"
+                stroke="#f59e0b"
+                strokeWidth={3}
+              />
             </LineChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -452,10 +579,20 @@ function DashboardContent({ revenueData, visitorsData, topProducts, totalRevenue
   );
 }
 
-function KPI({ title, value, color }: { title: string; value: string; color: string }) {
+function KPI({
+  title,
+  value,
+  color,
+}: {
+  title: string;
+  value: string;
+  color: string;
+}) {
   return (
     <div className="bg-white p-6 rounded-2xl shadow hover:shadow-lg transition transform hover:-translate-y-1 border border-gray-100">
-      <h3 className={`text-sm font-medium bg-gradient-to-r ${color} bg-clip-text text-transparent mb-1`}>
+      <h3
+        className={`text-sm font-medium bg-gradient-to-r ${color} bg-clip-text text-transparent mb-1`}
+      >
         {title}
       </h3>
       <p className="text-3xl font-bold text-gray-800">{value}</p>
