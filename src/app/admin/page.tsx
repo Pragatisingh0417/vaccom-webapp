@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-
 import Allorder from "./cms/orders/page";
 import AddProductPage from "./cms/add-product/page";
 import ProductListPage from "./cms/product-list/page";
@@ -14,6 +13,7 @@ import TopCleaningBrands from "../components/TopCleaningBrands";
 import OrdersList from "./cms/orders/orders-list/OrdersList";
 import AllUsersPage from "./cms/all-users/page";
 import CreateAdminPage from "./create-admin/page";
+import RecentOrders from "../components/RecentOrders";
 import {
   LineChart,
   Line,
@@ -53,6 +53,7 @@ export default function AdminDashboard() {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [filter, setFilter] = useState<"week" | "month" | "year">("week");
 
   // Fetch session and role
   useEffect(() => {
@@ -328,6 +329,8 @@ export default function AdminDashboard() {
             totalEarnings={totalEarnings}
             totalVisitors={totalVisitors}
             topProductName={topProductName}
+            filter={filter}
+            setFilter={setFilter}
           />
         )}
 
@@ -347,7 +350,7 @@ export default function AdminDashboard() {
         {activeTab === "transactions" && hasAccess("transactions") && (
           <TransactionPage />
         )}
-       
+
         {activeTab === "TopCleaningBrands" &&
           hasAccess("TopCleaningBrands") && <TopCleaningBrands />}
         {activeTab === "add-coupon" && hasAccess("add-coupon") && <AddCoupon />}
@@ -356,7 +359,7 @@ export default function AdminDashboard() {
         )}
         {/* {activeTab === "users" && hasAccess("users") && <TabContent title="Users" />} */}
         {activeTab === "users" && hasAccess("users") && <AllUsersPage />}
-         {activeTab === "create-admin" && hasAccess("create-admin") && (
+        {activeTab === "create-admin" && hasAccess("create-admin") && (
           <CreateAdminPage />
         )}
       </main>
@@ -495,6 +498,8 @@ function DashboardContent({
   totalEarnings,
   totalVisitors,
   topProductName,
+  filter,
+  setFilter,
 }: any) {
   return (
     <>
@@ -520,6 +525,24 @@ function DashboardContent({
           color="from-purple-500 to-purple-600"
         />
       </div>
+      {/* Filter Tabs */}
+      <div className="flex gap-2 mb-4">
+        {["week", "month", "year"].map((f) => (
+          <button
+            key={f}
+            onClick={() => setFilter(f)}
+            className={`px-4 py-2 rounded ${
+              filter === f
+                ? "bg-blue-600 text-white"
+                : "bg-gray-200 text-gray-700"
+            }`}
+          >
+            {f.charAt(0).toUpperCase() + f.slice(1)}
+          </button>
+        ))}
+      </div>
+
+      {/* Charts */}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <ChartCard title="Revenue & Earnings">
@@ -564,17 +587,86 @@ function DashboardContent({
         </ChartCard>
       </div>
 
-      <ChartCard title="Top Products">
-        <ResponsiveContainer width="100%" height={280}>
-          <BarChart data={topProducts}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" />
-            <YAxis />
-            <Tooltip />
-            <Bar dataKey="sales" fill="#6366f1" />
-          </BarChart>
-        </ResponsiveContainer>
-      </ChartCard>
+     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  {/* Top Products */}
+  <ChartCard title="Top Products">
+    <div className="space-y-5">
+      {topProducts.map((p: any, idx: number) => {
+        const maxSales = Math.max(
+          ...topProducts.map((t: any) => t.sales || 0),
+          1
+        );
+        const maxRevenue = Math.max(
+          ...topProducts.map((t: any) => t.revenue || 0),
+          1
+        );
+
+        const salesPercent = Math.min((p.sales / maxSales) * 100, 100);
+        const revenuePercent = Math.min((p.revenue / maxRevenue) * 100, 100);
+
+        return (
+          <div
+            key={p.name}
+            className="bg-white shadow rounded-xl p-5 flex flex-col gap-3 hover:shadow-md transition-all"
+          >
+            {/* Header */}
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <span className="text-gray-800 font-semibold">{idx + 1}.</span>
+                <span className="text-gray-700 font-medium truncate max-w-[150px]">
+                  {p.name}
+                </span>
+              </div>
+              <div className="flex gap-2 text-xs sm:text-sm">
+                <span className="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-medium">
+                  {p.sales} Sales
+                </span>
+                <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">
+                  ${p.revenue}
+                </span>
+              </div>
+            </div>
+
+            {/* Bars with percentage labels */}
+            <div className="space-y-2">
+              {/* Sales */}
+              <div className="flex items-center gap-3">
+                <span className="w-14 text-xs text-gray-500">Sales</span>
+                <div className="flex-1 bg-gray-100 h-3 rounded-full overflow-hidden">
+                  <div
+                    className="h-3 bg-indigo-600 rounded-full transition-all duration-500"
+                    style={{ width: `${salesPercent}%` }}
+                  ></div>
+                </div>
+                <span className="text-xs font-bold text-indigo-600 w-10 text-right">
+                  {salesPercent.toFixed(0)}%
+                </span>
+              </div>
+
+              {/* Revenue */}
+              <div className="flex items-center gap-3">
+                <span className="w-14 text-xs text-gray-500">Revenue</span>
+                <div className="flex-1 bg-gray-100 h-3 rounded-full overflow-hidden">
+                  <div
+                    className="h-3 bg-green-500 rounded-full transition-all duration-500"
+                    style={{ width: `${revenuePercent}%` }}
+                  ></div>
+                </div>
+                <span className="text-xs font-bold text-green-600 w-10 text-right">
+                  {revenuePercent.toFixed(0)}%
+                </span>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  </ChartCard>
+
+  {/* Recent Orders */}
+  <RecentOrders />
+</div>
+
     </>
   );
 }
@@ -589,13 +681,13 @@ function KPI({
   color: string;
 }) {
   return (
-    <div className="bg-white p-6 rounded-2xl shadow hover:shadow-lg transition transform hover:-translate-y-1 border border-gray-100">
-      <h3
+    <div className="bg-white p-5 rounded-2xl shadow hover:shadow-lg transition transform hover:-translate-y-1 border border-gray-100">
+      <h2
         className={`text-sm font-medium bg-gradient-to-r ${color} bg-clip-text text-transparent mb-1`}
       >
         {title}
-      </h3>
-      <p className="text-3xl font-bold text-gray-800">{value}</p>
+      </h2>
+      <p className="text-xl font-bold text-gray-800">{value}</p>
     </div>
   );
 }
