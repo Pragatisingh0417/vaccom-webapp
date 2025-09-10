@@ -22,6 +22,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/app/Components/Navbar.js", "src/app/contact-us/page.jsx", "src/models/Admin.js"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/app/Components/Navbar.js", "src/app/contact-us/page.jsx", "src/models/Admin.js", "src/app/components/Topheader.jsx"],
   "exclude": ["node_modules"]
 }

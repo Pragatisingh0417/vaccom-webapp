@@ -5,62 +5,64 @@ import { useState, useRef, useEffect } from 'react';
 import { FiMapPin, FiMail, FiPhone, FiShoppingCart } from 'react-icons/fi';
 import { FaUser, FaHeart } from 'react-icons/fa';
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";   // ✅ Import router
 import { useCart } from "@/context/CartContext";
 import CartDrawer from "./CartDrawer";
+// import { getStoredUser, clearAuth } from '../api/auth/login';
 
-interface User {
-  id: string;
-  name: string;
-  email: string;
-}
-
-export default function TopNavbar() {
+export default function ContactHeader() {
   const { cart } = useCart();
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
-  const profileRef = useRef<HTMLDivElement>(null);
+  const profileRef = useRef();
 
   const [isOpen, setIsOpen] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState(null);  // ✅ Keep only one user state
 
   const router = useRouter();
+  // ✅ Get user from localStorage
+const getStoredUser = () => {
+  if (typeof window !== "undefined") {
+    const stored = localStorage.getItem("user");
+    return stored ? JSON.parse(stored) : null;
+  }
+  return null;
+};
 
-  // ✅ Load user from /api/auth/me instead of localStorage
+// ✅ Clear user (logout)
+const clearAuth = () => {
+  if (typeof window !== "undefined") {
+    localStorage.removeItem("user");
+  }
+};
+
+
+  // Load user from localStorage on mount
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const res = await fetch("/api/auth/me");
-        if (res.ok) {
-          const data = await res.json();
-          setUser(data.user);
-        } else {
-          setUser(null);
-        }
-      } catch {
-        setUser(null);
-      }
-    };
-    fetchUser();
+    setUser(getStoredUser());
+
+    // Keep multiple tabs in sync
+    const onStorage = () => setUser(getStoredUser());
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
   }, []);
+  
+const logout = async () => {
+  try {
+    await fetch("/api/auth/logout", { method: "POST" });
+    clearAuth(); // your existing cleanup function
+    setUser(null);
+    router.push("/auth");
+  } catch (error) {
+    console.error("Logout failed:", error);
+  }
+};
 
-  const logout = async () => {
-    try {
-      const res = await fetch("/api/auth/logout", { method: "POST" });
-      if (!res.ok) throw new Error("Failed to logout");
-
-      setUser(null);
-      router.push("/auth");
-    } catch (error) {
-      console.error("Logout failed:", error);
-    }
-  };
-
-  // ✅ Close profile dropdown on outside click
+  // Close profile dropdown on outside click
   useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+    function handleClickOutside(e) {
+      if (profileRef.current && !profileRef.current.contains(e.target)) {
         setProfileDropdownOpen(false);
       }
     }
@@ -104,7 +106,7 @@ export default function TopNavbar() {
         {/* Icons: Wishlist + Profile + Cart */}
         <div className="flex items-center gap-6 relative">
           {/* Wishlist */}
-          <Link href="/wishlist" aria-label="Wishlist" className="text-2xl text-red-700 hover:text-red-600 transition">
+          <Link href="/wishlist" aria-label="Wishlist" className="text-2xl text-red-700  hover:text-red-600 transition">
             <FaHeart />
           </Link>
 
@@ -137,12 +139,13 @@ export default function TopNavbar() {
                     <Link href="/orders" className="block px-4 py-2 hover:bg-gray-100">
                       Orders
                     </Link>
-                    <Link href="/wishlist" className="block px-4 py-2 hover:bg-gray-100">
+                     <Link href="/wishlist" className="block px-4 py-2 hover:bg-gray-100">
                       Wishlist
                     </Link>
-                    <Link href="/coupon" className="block px-4 py-2 hover:bg-gray-100">
+                     <Link href="/coupon" className="block px-4 py-2 hover:bg-gray-100">
                       Coupon
                     </Link>
+                    
                     <Link href="/notification" className="block px-4 py-2 hover:bg-gray-100">
                       Notification
                     </Link>

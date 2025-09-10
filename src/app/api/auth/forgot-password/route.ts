@@ -8,23 +8,40 @@ import { connectToDatabase } from "@/app/lib/mongodb";
 export async function POST(req: Request) {
   try {
     const { email } = await req.json();
+
+    if (!email) {
+      return NextResponse.json({ message: "Email is required" }, { status: 400 });
+    }
+
     await connectToDatabase();
 
     const user = await User.findOne({ email });
-    if (!user) {
-      return NextResponse.json(
-        { message: "If that email exists, a reset link has been sent." },
-        { status: 200 }
-      );
-    }
 
-    // Generate reset token & expiry
+    const responseMessage = {
+      message: "If that email exists, a reset link has been sent.",
+    };
+
+    if (!user) return NextResponse.json(responseMessage, { status: 200 });
+
+    // Generate raw token & expiry
     const resetToken = crypto.randomBytes(32).toString("hex");
-    const resetExpiry = Date.now() + 3600000; // 1 hour
+    const resetExpiry = new Date(Date.now() + 3600000); // 1 hour
 
-    user.resetPasswordToken = resetToken;
-    user.resetPasswordExpiry = resetExpiry;
+    // ✅ Use `set()` to ensure Mongoose updates the fields properly
+    user.set({
+      resetPasswordToken: resetToken,
+      resetPasswordExpiry: resetExpiry,
+    });
+
     await user.save();
+
+    // 🔹 DEBUG: Log the user after saving to verify fields
+    const savedUser = await User.findOne({ email });
+    console.log("User after saving token:", {
+      email: savedUser?.email,
+      resetPasswordToken: savedUser?.resetPasswordToken,
+      resetPasswordExpiry: savedUser?.resetPasswordExpiry,
+    });
 
     // Configure Nodemailer
     const transporter = nodemailer.createTransport({
@@ -35,10 +52,8 @@ export async function POST(req: Request) {
       },
     });
 
-    // Reset link
     const resetLink = `${process.env.NEXT_PUBLIC_BASE_URL}/auth/reset-password?token=${resetToken}`;
 
-    // Send email
     await transporter.sendMail({
       from: `"Vaccom Support" <${process.env.SMTP_USER}>`,
       to: email,
@@ -52,12 +67,13 @@ export async function POST(req: Request) {
       `,
     });
 
-    return NextResponse.json({ message: "Check your email for reset instructions" });
+    if (process.env.NODE_ENV === "development") {
+      console.log("Password reset link:", resetLink);
+    }
+
+    return NextResponse.json(responseMessage);
   } catch (error) {
-    console.error(error);
-    return NextResponse.json(
-      { message: "Something went wrong" },
-      { status: 500 }
-    );
+    console.error("Forgot password error:", error);
+    return NextResponse.json({ message: "Something went wrong" }, { status: 500 });
   }
 }
