@@ -1,10 +1,10 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import fsp from "fs/promises";
 import path from "path";
 
 export async function POST(
-  req: Request,
+  req: NextRequest,
   { params }: { params: { slug: string } }
 ) {
   const { slug } = params;
