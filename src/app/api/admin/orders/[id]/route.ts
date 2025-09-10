@@ -2,12 +2,11 @@ import { NextResponse, NextRequest } from "next/server";
 import { connectToDatabase } from "@/app/lib/mongodb";
 import Order from "@/models/Order";
 
-interface Params {
-  params: { id: string };
-}
-
 // ✅ GET: Fetch order by ID
-export async function GET(req: NextRequest, { params }: Params) {
+export async function GET(
+  req: NextRequest,
+  { params }: { params: { id: string } } // 👈 inline typing
+) {
   try {
     await connectToDatabase();
     const { id } = params;
@@ -28,7 +27,10 @@ export async function GET(req: NextRequest, { params }: Params) {
 }
 
 // ✅ PUT: Update order
-export async function PUT(req: NextRequest, { params }: Params) {
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
     await connectToDatabase();
     const { id } = params;
@@ -51,7 +53,10 @@ export async function PUT(req: NextRequest, { params }: Params) {
 }
 
 // ✅ DELETE: Remove order
-export async function DELETE(req: NextRequest, { params }: Params) {
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
     await connectToDatabase();
     const { id } = params;
