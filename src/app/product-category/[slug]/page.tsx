@@ -30,7 +30,9 @@ export default function CategoryPage({ params }: Props) {
     const apiUrl =
       normalizedSlug === "today-deals"
         ? `${baseUrl}/api/products?isTodayDeal=true`
-        : `${baseUrl}/api/products?category=${encodeURIComponent(normalizedSlug)}`;
+        : `${baseUrl}/api/products?category=${encodeURIComponent(
+            normalizedSlug
+          )}`;
 
     console.log("Fetching products from:", apiUrl);
 
@@ -65,13 +67,32 @@ export default function CategoryPage({ params }: Props) {
         </div>
       </div>
 
+      {/* Today Deals paragraph */}
+      {normalizedSlug === "today-deals" && (
+        <div className="max-w-6xl mx-auto p-6 text-lg text-gray-700">
+          <h5 className="mt-10">
+            <b>Vacuum Cleaners, Parts & Repairs — All in One Place</b>
+          </h5>
+          <p className="mt-5 mb-3">
+            Whether you’re shopping for a new vacuum, replacing parts, or
+            booking a repair, you can do it all right here. We offer fast
+            Australia-wide shipping and expert support from our experienced
+            vacuum technicians.
+          </p>
+          <p>
+            Not sure which model suits your home? Contact us or visit one of our
+            Melbourne stores — we’ll help you find the right fit.
+          </p>
+        </div>
+      )}
+
       {/* Products */}
       <div className="max-w-6xl mx-auto p-6">
-        <h1 className="text-3xl font-bold mb-6">
+        {/* <h1 className="text-3xl font-bold mb-6">
           {normalizedSlug === "today-deals"
             ? "Today's Deals"
             : toTitleCase(normalizedSlug)}
-        </h1>
+        </h1> */}
 
         <ProductToolbar
           results={products.length}

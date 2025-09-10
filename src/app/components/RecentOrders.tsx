@@ -30,7 +30,7 @@ export default function RecentOrders() {
     try {
       const res = await fetch("/api/admin/orders");
       const data = await res.json();
-      if (data.success) setOrders(data.orders.slice(0, 10)); // 👈 show only 5 latest
+      if (data.success) setOrders(data.orders.slice(0, 20)); // 👈 show only 5 latest
     } catch (err) {
       console.error(err);
     } finally {

@@ -2,12 +2,13 @@
 
 import LoginSignupForm from '../components/LoginSignupForm'; // adjust the path if needed
 import Image from 'next/image';
+import Link from 'next/link';
 
 export default function AuthPage() {
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
       {/* Left branding panel */}
-<div className="md:flex-1 bg-red-600 text-white flex-col justify-center items-center p-12 hidden md:flex">
+      <div className="md:flex-1 bg-red-600 text-white flex-col justify-center items-center p-12 hidden md:flex">
         <h1 className="text-4xl font-extrabold mb-6">Welcome to Vaccom</h1>
         <p className="text-lg max-w-md text-center mb-8">
           Experience the best vacuum and cleaning solutions with us. Please login or signup to continue.
@@ -23,8 +24,14 @@ export default function AuthPage() {
       </div>
 
       {/* Right form panel */}
-      <div className="flex-1 flex justify-center items-center p-8 bg-gray-50">
+      <div className="flex-1 flex flex-col justify-center items-center p-8 bg-gray-50">
         <LoginSignupForm />
+        <Link
+          href="/auth/forgot-password"
+          className="text-sm text-red-600 hover:underline mt-4"
+        >
+          Forgot Password?
+        </Link>
       </div>
     </div>
   );

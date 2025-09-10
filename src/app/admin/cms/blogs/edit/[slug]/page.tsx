@@ -1,13 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import dynamic from "next/dynamic";
 import { useRouter, useParams } from "next/navigation";
-
-const BlogEditor = dynamic<{ value: string; onChange: (val: string) => void }>(
-  () => import("@/app/components/BlogEditor"),
-  { ssr: false }
-);
 
 export default function EditBlogPage() {
   const router = useRouter();
@@ -22,7 +16,7 @@ export default function EditBlogPage() {
   const [excerpt, setExcerpt] = useState("");
   const [featuredImage, setFeaturedImage] = useState("");
   const [author, setAuthor] = useState({ name: "", avatar: "" });
-  const [content, setContent] = useState("<p></p>");
+  const [content, setContent] = useState("");
 
   useEffect(() => {
     if (!slug) return;
@@ -37,7 +31,7 @@ export default function EditBlogPage() {
           setExcerpt(data.excerpt || "");
           setFeaturedImage(data.featuredImage || "");
           setAuthor(data.author || { name: "", avatar: "" });
-          setContent(data.content || "<p></p>");
+          setContent(data.content || "");
         } else {
           setError(data.error || "Blog not found");
         }
@@ -136,10 +130,13 @@ export default function EditBlogPage() {
           placeholder="Author Avatar URL"
         />
 
-        {/* Blog Editor */}
-        <div className="border p-2 rounded">
-          <BlogEditor value={content} onChange={setContent} />
-        </div>
+        {/* Content */}
+        <textarea
+          className="w-full border p-2 rounded h-40"
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          placeholder="Blog Content"
+        />
 
         {/* Submit */}
         <button

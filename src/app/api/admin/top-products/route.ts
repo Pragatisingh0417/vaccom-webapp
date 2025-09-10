@@ -69,6 +69,7 @@ export async function GET() {
             revenue: { $multiply: ["$totalSold", "$price"] },
           },
         },
+        
       ]);
     }
 
