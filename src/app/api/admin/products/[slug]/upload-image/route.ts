@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import fs from "fs";
+import fsp from "fs/promises";
+import path from "path";
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: { slug: string } }  // ✅ correct typing
-) {
-  const slug = params.slug;
+export async function POST(req: NextRequest, event: { params: { slug: string } }) {
+  const { slug } = event.params;
 
   if (!slug) {
     return NextResponse.json({ error: "Slug required" }, { status: 400 });
@@ -14,12 +14,27 @@ export async function POST(
     const formData = await req.formData();
     const files: File[] = formData.getAll("images") as File[];
 
-    // Here you would upload to S3/Cloudinary, not fs
-    const uploadedPaths = files.map((file) => `/fake-path/${file.name}`);
+    // Ensure upload directory exists
+    const uploadDir = path.join(process.cwd(), "public", "uploads");
+    if (!fs.existsSync(uploadDir)) {
+      await fsp.mkdir(uploadDir, { recursive: true });
+    }
 
-    return NextResponse.json({ filePaths: uploadedPaths });
+    const filePaths: string[] = [];
+
+    for (const file of files) {
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      const filename = `${Date.now()}-${file.name}`;
+      const filepath = path.join(uploadDir, filename);
+
+      await fsp.writeFile(filepath, buffer);
+      filePaths.push(`/uploads/${filename}`);
+    }
+
+    return NextResponse.json({ filePaths });
   } catch (err) {
-    console.error(err);
+    console.error("❌ Upload error:", err);
     return NextResponse.json({ error: "Upload failed" }, { status: 500 });
   }
 }
