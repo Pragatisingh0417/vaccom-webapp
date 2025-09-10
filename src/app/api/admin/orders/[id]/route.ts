@@ -2,104 +2,63 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/app/lib/mongodb";
 import Order from "@/models/Order";
 
-// ✅ define context type once
-type Context = {
-  params: { id: string };
-};
-
-// ✅ GET: Fetch order by ID
-export async function GET(req: NextRequest, context: Context) {
+// ✅ GET a single order by ID
+export async function GET(req: NextRequest, { params }: any) {
   try {
     await connectToDatabase();
-    const { id } = context.params;
+    const order = await Order.findById(params.id);
 
-    if (!id || id.length !== 24) {
-      return NextResponse.json(
-        { success: false, error: "Invalid order ID" },
-        { status: 400 }
-      );
-    }
-
-    const order = await Order.findById(id).populate("user", "name email").lean();
     if (!order) {
-      return NextResponse.json(
-        { success: false, error: "Order not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ message: "Order not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, order }, { status: 200 });
-  } catch (err: any) {
+    return NextResponse.json(order, { status: 200 });
+  } catch (error) {
     return NextResponse.json(
-      { success: false, error: err.message || "Unexpected error" },
+      { message: "Error fetching order", error },
       { status: 500 }
     );
   }
 }
 
-// ✅ PUT: Update order
-export async function PUT(req: NextRequest, context: Context) {
+// ✅ UPDATE an order by ID
+export async function PUT(req: NextRequest, { params }: any) {
   try {
     await connectToDatabase();
-    const { id } = context.params;
+    const data = await req.json();
 
-    if (!id || id.length !== 24) {
-      return NextResponse.json(
-        { success: false, error: "Invalid order ID" },
-        { status: 400 }
-      );
+    const order = await Order.findByIdAndUpdate(params.id, data, { new: true });
+
+    if (!order) {
+      return NextResponse.json({ message: "Order not found" }, { status: 404 });
     }
 
-    const body = await req.json();
-    const updatedOrder = await Order.findByIdAndUpdate(id, body, {
-      new: true,
-    }).lean();
-
-    if (!updatedOrder) {
-      return NextResponse.json(
-        { success: false, error: "Order not found" },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({ success: true, order: updatedOrder }, { status: 200 });
-  } catch (err: any) {
+    return NextResponse.json(order, { status: 200 });
+  } catch (error) {
     return NextResponse.json(
-      { success: false, error: err.message || "Unexpected error" },
+      { message: "Error updating order", error },
       { status: 500 }
     );
   }
 }
 
-// ✅ DELETE: Remove order
-export async function DELETE(req: NextRequest, context: Context) {
+// ✅ DELETE an order by ID
+export async function DELETE(req: NextRequest, { params }: any) {
   try {
     await connectToDatabase();
-    const { id } = context.params;
+    const order = await Order.findByIdAndDelete(params.id);
 
-    if (!id || id.length !== 24) {
-      return NextResponse.json(
-        { success: false, error: "Invalid order ID" },
-        { status: 400 }
-      );
-    }
-
-    const deletedOrder = await Order.findByIdAndDelete(id).lean();
-
-    if (!deletedOrder) {
-      return NextResponse.json(
-        { success: false, error: "Order not found" },
-        { status: 404 }
-      );
+    if (!order) {
+      return NextResponse.json({ message: "Order not found" }, { status: 404 });
     }
 
     return NextResponse.json(
-      { success: true, message: "Order deleted successfully" },
+      { message: "Order deleted successfully" },
       { status: 200 }
     );
-  } catch (err: any) {
+  } catch (error) {
     return NextResponse.json(
-      { success: false, error: err.message || "Unexpected error" },
+      { message: "Error deleting order", error },
       { status: 500 }
     );
   }
