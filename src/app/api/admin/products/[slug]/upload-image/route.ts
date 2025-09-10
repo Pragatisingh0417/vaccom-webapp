@@ -5,9 +5,12 @@ import path from "path";
 
 export async function POST(
   req: NextRequest,
-  context: { params: { slug: string } }
+  context: { params: Record<string, string | string[]> }
 ) {
-  const { slug } = context.params;
+  const slug = Array.isArray(context.params.slug)
+    ? context.params.slug[0]
+    : context.params.slug;
+
   if (!slug) {
     return NextResponse.json({ error: "Slug required" }, { status: 400 });
   }
