@@ -31,6 +31,17 @@ export default function TransactionPage() {
     fetchTransactions();
   }, []);
 
+  const handleStatusChange = async (id: string, status: Transaction["status"]) => {
+    try {
+      const res = await axios.patch(`/api/admin/transactions/${id}`, { status });
+      setTransactions((prev) =>
+        prev.map((tx) => (tx._id === id ? { ...tx, status: res.data.transaction.status } : tx))
+      );
+    } catch (err) {
+      console.error("Failed to update status:", err);
+    }
+  };
+
   if (loading) return <p className="p-6">Loading transactions...</p>;
 
   return (
@@ -53,16 +64,22 @@ export default function TransactionPage() {
                 <td className="px-6 py-4 whitespace-nowrap">{tx.user.name} ({tx.user.email})</td>
                 <td className="px-6 py-4 whitespace-nowrap">${tx.amount.toFixed(2)}</td>
                 <td className="px-6 py-4 whitespace-nowrap">{tx.paymentMethod}</td>
-                <td
-                  className={`px-6 py-4 whitespace-nowrap font-semibold ${
-                    tx.status === "completed"
-                      ? "text-green-600"
-                      : tx.status === "pending"
-                      ? "text-yellow-600"
-                      : "text-red-600"
-                  }`}
-                >
-                  {tx.status}
+                <td className="px-6 py-4 whitespace-nowrap font-semibold">
+                  <select
+                    value={tx.status}
+                    onChange={(e) => handleStatusChange(tx._id, e.target.value as Transaction["status"])}
+                    className={`font-semibold px-2 py-1 rounded border ${
+                      tx.status === "completed"
+                        ? "text-green-600 border-green-600"
+                        : tx.status === "pending"
+                        ? "text-yellow-600 border-yellow-600"
+                        : "text-red-600 border-red-600"
+                    }`}
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="completed">Completed</option>
+                    <option value="failed">Failed</option>
+                  </select>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">{new Date(tx.createdAt).toLocaleString()}</td>
               </tr>

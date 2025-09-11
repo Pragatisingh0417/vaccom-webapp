@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 
 export default function CheckoutForm() {
-  const { cart, clearCart } = useCart(); // ✅ correct place
+  const { cart, clearCart } = useCart();
   const stripe = useStripe();
   const elements = useElements();
   const router = useRouter();
@@ -22,41 +22,35 @@ export default function CheckoutForm() {
     if (!card) return;
 
     try {
-      const { error, paymentMethod } = await stripe.createPaymentMethod({
-        type: "card",
-        card,
-      });
-
+      const { error } = await stripe.createPaymentMethod({ type: "card", card });
       if (error) {
         console.error(error);
         router.push("/cancel");
         return;
       }
 
-      // ✅ Calculate total amount from cart
-      const amount = cart.reduce(
-        (sum, item) => sum + item.price * item.quantity,
-        0
-      );
+      const amount = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-      // ✅ Send order to backend
+      // ✅ Get user email from localStorage
+      const userEmail = localStorage.getItem("userEmail");
+
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`, // or cookie/session
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
         body: JSON.stringify({
-          items: cart.map((item) => ({
-            productId: item.id, // ✅ match schema
+          items: cart.map(item => ({
+            productId: item.id,
             name: item.name,
             price: item.price,
-            qty: item.quantity, // ✅ matches your model's `qty`
-                image: item.imageUrl || item.imageUrl  || "/placeholder.png", // <-- ADD THIS
-
+            qty: item.quantity,
+            image: item.imageUrl || "/placeholder.png",
           })),
           amount,
           currency: "usd",
+          userEmail, // ✅ Include userEmail in order
         }),
       });
 
@@ -66,8 +60,12 @@ export default function CheckoutForm() {
       console.log("✅ Order created:", data);
 
       if (data.success) {
-        clearCart(); // ✅ clear cart after successful order
-        router.push("/success");
+        // ✅ Save full order with email in localStorage
+        const orderWithEmail = { ...data.order, userEmail };
+        localStorage.setItem("latestOrder", JSON.stringify(orderWithEmail));
+
+        clearCart();
+        router.push("/success"); // confirmation page
       }
     } catch (err) {
       console.error("❌ Error in checkout:", err);

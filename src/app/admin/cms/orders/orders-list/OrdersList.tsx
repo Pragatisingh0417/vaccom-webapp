@@ -76,32 +76,35 @@ export default function OrdersList() {
 
   // ✅ Handle status update
   const handleStatusUpdate = async (orderId: string) => {
-    const newStatus = selectedStatuses[orderId];
-    if (!newStatus) return;
+  const newStatus = selectedStatuses[orderId];
+  if (!newStatus) return;
 
-    setUpdatingId(orderId);
-    try {
-      const res = await fetch(`/api/admin/orders/${orderId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        setOrders((prev) =>
-          prev.map((o) => (o._id === orderId ? { ...o, status: newStatus } : o))
-        );
-        alert("Order status updated!");
-      } else {
-        alert(data.error || "Failed to update order status");
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Unexpected error while updating order status");
-    } finally {
-      setUpdatingId(null);
+  setUpdatingId(orderId);
+  try {
+    const res = await fetch(`/api/admin/orders/${orderId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: newStatus }),
+    });
+
+    const data = await res.json();
+
+    if (data.success && data.order) {
+      setOrders((prev) =>
+        prev.map((o) => (o._id === orderId ? data.order : o))
+      );
+      alert("Order status updated!");
+    } else {
+      alert(data.message || "Failed to update order status");
     }
-  };
+  } catch (err) {
+    console.error(err);
+    alert("Unexpected error while updating order status");
+  } finally {
+    setUpdatingId(null);
+  }
+};
+
 
   // ✅ Filter orders by time
   const filteredOrders = orders.filter((order) => {
