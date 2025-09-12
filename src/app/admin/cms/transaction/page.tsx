@@ -9,6 +9,7 @@ interface Transaction {
   amount: number;
   status: "pending" | "completed" | "failed";
   paymentMethod: string;
+  stripePaymentIntentId?: string; // ✅ new field
   createdAt: string;
 }
 
@@ -16,19 +17,24 @@ export default function TransactionPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchTransactions = async () => {
-      try {
-        const res = await axios.get("/api/admin/transactions");
-        setTransactions(res.data.transactions);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Fetch transactions from API
+  const fetchTransactions = async () => {
+    try {
+      const res = await axios.get("/api/admin/transactions");
+      setTransactions(res.data.transactions);
+    } catch (err) {
+      console.error("Failed to fetch transactions:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchTransactions();
+
+    // ✅ Poll every 5 seconds for updates
+    const interval = setInterval(fetchTransactions, 5000);
+    return () => clearInterval(interval); // cleanup on unmount
   }, []);
 
   const handleStatusChange = async (id: string, status: Transaction["status"]) => {
@@ -54,6 +60,7 @@ export default function TransactionPage() {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Method</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stripe Payment ID</th> {/* ✅ new column */}
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
             </tr>
@@ -64,6 +71,7 @@ export default function TransactionPage() {
                 <td className="px-6 py-4 whitespace-nowrap">{tx.user.name} ({tx.user.email})</td>
                 <td className="px-6 py-4 whitespace-nowrap">${tx.amount.toFixed(2)}</td>
                 <td className="px-6 py-4 whitespace-nowrap">{tx.paymentMethod}</td>
+                <td className="px-6 py-4 whitespace-nowrap">{tx.stripePaymentIntentId || "-"}</td> {/* ✅ display Stripe ID */}
                 <td className="px-6 py-4 whitespace-nowrap font-semibold">
                   <select
                     value={tx.status}

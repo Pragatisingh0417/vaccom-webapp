@@ -3,7 +3,6 @@ import mongoose from "mongoose";
 import { v4 as uuidv4 } from "uuid";
 import "@/models/User"; 
 
-
 const OrderSchema = new mongoose.Schema({
   orderId: { type: String, unique: true },
   user: {
@@ -22,10 +21,13 @@ const OrderSchema = new mongoose.Schema({
   ],
   amount: { type: Number, required: true },
   currency: { type: String, default: "usd", lowercase: true },
-  status: { type: String, default: "pending" },
+
+  // ✅ New fields
+  paymentId: { type: String, index: true }, // Stripe PaymentIntent ID
+  status: { type: String, enum: ["pending", "completed", "failed"], default: "pending" },
+
   createdAt: { type: Date, default: Date.now },
 });
-
 
 // ✅ Auto-generate unique orderId if missing
 OrderSchema.pre("save", function (next) {

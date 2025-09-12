@@ -3,8 +3,9 @@ import mongoose, { Document, Model, Schema } from "mongoose";
 export interface ITransaction extends Document {
   user: mongoose.Types.ObjectId; // reference to User
   amount: number;
-  status: "pending" | "completed" | "failed"; // <--- must exist
+  status: "pending" | "completed" | "failed"; // must exist
   paymentMethod: string;
+  stripePaymentIntentId?: string; // ✅ new field
   createdAt: Date;
 }
 
@@ -13,6 +14,7 @@ const TransactionSchema: Schema<ITransaction> = new Schema({
   amount: { type: Number, required: true },
   status: { type: String, enum: ["pending", "completed", "failed"], default: "pending" },
   paymentMethod: { type: String, required: true },
+  stripePaymentIntentId: { type: String }, // ✅ store Stripe PaymentIntent ID
   createdAt: { type: Date, default: Date.now },
 });
 

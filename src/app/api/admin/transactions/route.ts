@@ -25,17 +25,17 @@ export async function GET(req: NextRequest) {
       .sort({ createdAt: -1 })
       .lean(); // plain objects, faster than Mongoose docs
 
-    const safeTransactions: SafeTransaction[] = transactions.map((t: any) => ({
-      _id: t._id.toString(),
-      amount: t.amount,
-      status: t.status,
-      paymentMethod: t.paymentMethod,
-      createdAt: t.createdAt.toISOString(),
-      user: t.user
-        ? { name: t.user.name, email: t.user.email }
-        : { name: "Unknown User", email: "N/A" },
-    }));
-
+   const safeTransactions: SafeTransaction[] = transactions.map((t: any) => ({
+  _id: t._id.toString(),
+  amount: t.amount,
+  status: t.status,
+  paymentMethod: t.paymentMethod,
+  stripePaymentIntentId: t.stripePaymentIntentId || null, // ✅ include Stripe ID
+  createdAt: t.createdAt.toISOString(),
+  user: t.user
+    ? { name: t.user.name, email: t.user.email }
+    : { name: "Unknown User", email: "N/A" },
+}));
     return NextResponse.json({ success: true, transactions: safeTransactions });
   } catch (error: any) {
     console.error("Error fetching transactions:", error);

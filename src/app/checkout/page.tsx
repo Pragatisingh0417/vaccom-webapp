@@ -34,10 +34,17 @@ export default function CheckoutPage() {
   const [couponMessage, setCouponMessage] = useState<string | null>(null);
   const [couponError, setCouponError] = useState<string | null>(null);
 
+  // Calculate subtotal
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const shipping = 0;
+
+  // Shipping logic: free above $149 for AU & NZ
+  const shipping =
+    (selectedCountry === "Australia" || selectedCountry === "New Zealand") && subtotal >= 149
+      ? 0
+      : 10; // default shipping $10
   const delivery = 0;
   const total = subtotal + shipping + delivery;
+  const totalAmount = appliedCoupon ? appliedCoupon.finalAmount + shipping : total;
 
   // Apply coupon
   const handleApplyCoupon = async () => {
@@ -74,58 +81,6 @@ export default function CheckoutPage() {
       setAppliedCoupon(null);
       setCouponError(err.message);
       setCouponMessage(null);
-    }
-  };
-
-  // Place order
-  const handlePlaceOrder = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) return alert("Please login first");
-
-    const orderPayload = {
-      items: cart.map((item) => ({
-        _id: item.id,
-        name: item.name,
-        price: item.price,
-        qty: item.quantity,
-        image: item.imageUrl || "/placeholder.png",
-      })),
-      amount: appliedCoupon ? appliedCoupon.finalAmount : total,
-      currency: "usd",
-      coupon: appliedCoupon?.code || null,
-      email, // ✅ Important to send email
-    };
-
-    try {
-      const res = await fetch("/api/orders", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(orderPayload),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Order failed");
-
-      // After order is created, send confirmation email
-      await fetch("/api/orders/confirmation", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          orderId: data.order._id,
-          email: email,
-          items: data.order.products,
-          amount: data.order.amount,
-        }),
-      });
-
-      alert("🎉 Order placed successfully! Confirmation email sent.");
-      window.location.href = "/orders";
-    } catch (err: any) {
-      console.error(err);
-      alert(err.message);
     }
   };
 
@@ -196,16 +151,8 @@ export default function CheckoutPage() {
         <div className="space-y-6">
           <h2 className="text-2xl font-bold mb-4">Contact & Payment</h2>
           <form className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input
-              type="text"
-              placeholder="First Name"
-              className="border p-3 rounded-md w-full"
-            />
-            <input
-              type="text"
-              placeholder="Last Name"
-              className="border p-3 rounded-md w-full"
-            />
+            <input type="text" placeholder="First Name" className="border p-3 rounded-md w-full" />
+            <input type="text" placeholder="Last Name" className="border p-3 rounded-md w-full" />
             <input
               type="email"
               placeholder="Email Address"
@@ -213,11 +160,7 @@ export default function CheckoutPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
-            <input
-              type="text"
-              placeholder="Phone Number"
-              className="border p-3 rounded-md w-full md:col-span-2"
-            />
+            <input type="text" placeholder="Phone Number" className="border p-3 rounded-md w-full md:col-span-2" />
             <div className="md:col-span-2">
               <label className="block text-sm font-medium mb-1">Country/Region</label>
               <select
@@ -254,15 +197,7 @@ export default function CheckoutPage() {
               ) : (
                 <input
                   type="text"
-                  placeholder={
-                    stateLoading
-                      ? "Loading states..."
-                      : stateError
-                      ? "Type your state/region"
-                      : selectedCountry
-                      ? "No states found – type your state/region"
-                      : "Select country first"
-                  }
+                  placeholder={stateLoading ? "Loading states..." : stateError ? "Type your state/region" : selectedCountry ? "No states found – type your state/region" : "Select country first"}
                   className="border p-3 rounded-md w-full"
                   disabled={!selectedCountry || stateLoading}
                   value={selectedState}
@@ -292,7 +227,7 @@ export default function CheckoutPage() {
             {couponError && <p className="text-sm mt-1 text-red-600">{couponError}</p>}
           </div>
 
-          <CheckoutForm />
+          <CheckoutForm cart={cart} email={email} totalAmount={totalAmount} />
         </div>
 
         {/* Right: Order Summary */}
@@ -318,13 +253,10 @@ export default function CheckoutPage() {
 
           <div className="mt-4 space-y-2 text-sm">
             <div className="flex justify-between"><span>Subtotal</span><span>${subtotal.toFixed(2)}</span></div>
-            <div className="flex justify-between"><span>Delivery</span><span className="text-green-600 font-semibold">FREE</span></div>
-            <div className="flex justify-between"><span>Shipping</span><span className="text-green-600 font-semibold">FREE</span></div>
+            <div className="flex justify-between"><span>Delivery</span><span className={shipping === 0 ? "text-green-600 font-semibold" : ""}>{shipping === 0 ? "FREE" : `$${shipping.toFixed(2)}`}</span></div>
             {appliedCoupon && <div className="flex justify-between text-green-700 font-semibold"><span>Coupon ({appliedCoupon.code})</span><span>- ${appliedCoupon.discount.toFixed(2)}</span></div>}
-            <div className="flex justify-between text-lg font-bold border-t pt-2"><span>Total</span><span>${appliedCoupon ? appliedCoupon.finalAmount.toFixed(2) : total.toFixed(2)}</span></div>
+            <div className="flex justify-between text-lg font-bold border-t pt-2"><span>Total</span><span>${totalAmount.toFixed(2)}</span></div>
           </div>
-
-          <button onClick={handlePlaceOrder} className="mt-4 w-full bg-red-500 text-white px-4 py-2 rounded">Place Order</button>
         </div>
       </div>
     </Elements>

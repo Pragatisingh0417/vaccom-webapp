@@ -5,8 +5,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 
-export default function CheckoutForm() {
-  const { cart, clearCart } = useCart();
+type CheckoutFormProps = {
+  cart: any[];
+  email: string;
+  totalAmount: number;
+};
+
+export default function CheckoutForm({ cart, email, totalAmount }: CheckoutFormProps) {
+  const { clearCart } = useCart();
   const stripe = useStripe();
   const elements = useElements();
   const router = useRouter();
@@ -17,58 +23,74 @@ export default function CheckoutForm() {
     if (!stripe || !elements) return;
 
     setProcessing(true);
-
     const card = elements.getElement(CardElement);
-    if (!card) return;
+    if (!card) {
+      setProcessing(false);
+      return;
+    }
 
     try {
-      const { error } = await stripe.createPaymentMethod({ type: "card", card });
+      // 1️⃣ Create PaymentIntent on backend
+      const checkoutRes = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: totalAmount * 100, currency: "usd" }), // amount in cents
+      });
+
+      if (!checkoutRes.ok) throw new Error("Failed to create PaymentIntent");
+      const { clientSecret } = await checkoutRes.json();
+
+      // 2️⃣ Confirm payment with Stripe
+      const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+        payment_method: {
+          card,
+          billing_details: { email: email || "guest@example.com" },
+        },
+      });
+
       if (error) {
-        console.error(error);
+        console.error("❌ Payment failed:", error.message);
         router.push("/cancel");
         return;
       }
 
-      const amount = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+      if (paymentIntent.status === "succeeded") {
+        // 3️⃣ Create order in your database
+        const orderRes = await fetch("/api/orders", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({
+            items: cart.map((item) => ({
+              productId: item.id,
+              name: item.name,
+              price: item.price,
+              qty: item.quantity,
+              image: item.imageUrl || "/placeholder.png",
+            })),
+            amount: totalAmount,
+            currency: "usd",
+            paymentId: paymentIntent.id,
+            userEmail: email,
+          }),
+        });
 
-      // ✅ Get user email from localStorage
-      const userEmail = localStorage.getItem("userEmail");
+        if (!orderRes.ok) throw new Error("Failed to save order");
+        const data = await orderRes.json();
 
-      const res = await fetch("/api/orders", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({
-          items: cart.map(item => ({
-            productId: item.id,
-            name: item.name,
-            price: item.price,
-            qty: item.quantity,
-            image: item.imageUrl || "/placeholder.png",
-          })),
-          amount,
-          currency: "usd",
-          userEmail, // ✅ Include userEmail in order
-        }),
-      });
+        if (data.success) {
+          const orderWithEmail = { ...data.order, userEmail: email };
+          localStorage.setItem("latestOrder", JSON.stringify(orderWithEmail));
 
-      if (!res.ok) throw new Error("Failed to create order");
-
-      const data = await res.json();
-      console.log("✅ Order created:", data);
-
-      if (data.success) {
-        // ✅ Save full order with email in localStorage
-        const orderWithEmail = { ...data.order, userEmail };
-        localStorage.setItem("latestOrder", JSON.stringify(orderWithEmail));
-
-        clearCart();
-        router.push("/success"); // confirmation page
+          // 4️⃣ Clear cart & redirect to success
+          clearCart();
+          router.push("/success");
+        }
       }
-    } catch (err) {
-      console.error("❌ Error in checkout:", err);
+    } catch (err: any) {
+      console.error("❌ Checkout error:", err.message);
       router.push("/cancel");
     } finally {
       setProcessing(false);
@@ -76,7 +98,7 @@ export default function CheckoutForm() {
   };
 
   return (
-    <form className="space-y-6" onSubmit={handleSubmit}>
+    <form className="space-y-6 mt-6" onSubmit={handleSubmit}>
       <div>
         <label className="block text-sm font-medium mb-1">Card Details</label>
         <div className="border p-3 rounded-md">
@@ -89,7 +111,7 @@ export default function CheckoutForm() {
         disabled={!stripe || processing}
         className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition"
       >
-        {processing ? "Processing..." : "Pay Now"}
+        {processing ? "Processing..." : `Pay $${totalAmount.toFixed(2)}`}
       </button>
     </form>
   );
