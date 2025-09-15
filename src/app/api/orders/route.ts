@@ -68,39 +68,44 @@ export async function POST(req: Request) {
       image: item.image || "/placeholder.png",
     }));
 
-    let paymentStatus: "pending" | "completed" | "failed" = "pending";
+let orderStatus: "pending" | "failed" = "pending"; // default
+let transactionStatus: "completed" | "failed" | "pending" = "pending"; // <-- declare first
+
 
     // ✅ If paymentId is provided, check Stripe payment status
-    if (body.paymentId) {
-      try {
-        const paymentIntent = await stripe.paymentIntents.retrieve(body.paymentId);
-        if (paymentIntent.status === "succeeded") paymentStatus = "completed";
-        else if (paymentIntent.status === "requires_payment_method") paymentStatus = "failed";
-        else paymentStatus = "pending";
-      } catch (err) {
-        console.error("Stripe retrieval error:", err);
-      }
+   if (body.paymentId) {
+  try {
+    const paymentIntent = await stripe.paymentIntents.retrieve(body.paymentId);
+    if (paymentIntent.status === "succeeded") {
+      orderStatus = "pending"; // Not completed
+      transactionStatus = "completed"; // Transaction is completed
+    } else {
+      orderStatus = "failed";
+      transactionStatus = "failed";
     }
-
+  } catch (err) {
+    console.error("Stripe retrieval error:", err);
+  }
+}
     // 1️⃣ Create the order
     const order = await Order.create({
-      user: decoded.id,
-      userEmail,
-      products: normalizedItems,
-      amount: body.amount,
-      currency: body.currency || "usd",
-      paymentId: body.paymentId || null, // Stripe PaymentIntent ID
-      status: paymentStatus,
-    });
+  user: decoded.id,
+  userEmail,
+  products: normalizedItems,
+  amount: body.amount,
+  currency: body.currency || "usd",
+  paymentId: body.paymentId || null,
+  status: orderStatus, // <-- pending if payment succeeded
+});
 
     // 2️⃣ Create a corresponding transaction
     const transaction = await Transaction.create({
-      user: decoded.id,
-      amount: body.amount,
-      status: paymentStatus,
-      paymentMethod: "stripe",
-      stripePaymentIntentId: body.paymentId || null,
-    });
+  user: decoded.id,
+  amount: body.amount,
+  status: transactionStatus, // <-- completed if payment succeeded
+  paymentMethod: "stripe",
+  stripePaymentIntentId: body.paymentId || null,
+});
 
     // 3️⃣ Send confirmation email
     try {

@@ -93,17 +93,18 @@ export default function ProductCard({ product, view = "grid" }: Props) {
         </button>
 
         {/* Badge */}
-        {product.salePrice || product.badge ? (
-          <span
-            className={`absolute -top-2 -left-2 z-10 text-xs font-bold px-6 py-3 rounded-full shadow-md ${
-              product.salePrice || product.badge === "sale"
-                ? "bg-red-600 text-white"
-                : "bg-green-500 text-white"
-            }`}
-          >
-            {product.salePrice || product.badge === "sale" ? "ON SALE" : "NEW"}
-          </span>
-        ) : null}
+       {(product.salePrice != null || product.badge) && (
+  <span
+    className={`absolute -top-2 -left-2 z-10 text-xs font-bold px-6 py-3 rounded-full shadow-md ${
+      product.salePrice != null || product.badge === "sale"
+        ? "bg-red-600 text-white"
+        : "bg-green-500 text-white"
+    }`}
+  >
+    {product.salePrice != null || product.badge === "sale" ? "ON SALE" : "NEW"}
+  </span>
+)}
+
 
         {/* Product Image */}
         <Link href={`/products/${product.slug}`} className="flex-shrink-0 relative">

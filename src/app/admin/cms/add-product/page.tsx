@@ -56,52 +56,58 @@ export default function AddProductPage() {
     }
   };
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    try {
-      const formData = new FormData();
-      formData.append("name", product.name);
-      formData.append("price", product.price);
-      if (product.salePrice) formData.append("salePrice", product.salePrice);
-      formData.append("shortDesc", product.shortDesc);
-      formData.append("longDesc", product.longDesc);
-      formData.append("brand", product.brand);
-      formData.append("category", product.category);
-      formData.append("isTodayDeal", product.isTodayDeal ? "true" : "false");
+ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+  try {
+    const formData = new FormData();
+    formData.append("name", product.name);
+    formData.append("price", String(Number(product.price)));
 
-      // ✅ Send stock as a number
-      formData.append("stock", String(Number(product.stock)));
-
-      product.images.forEach((img) => formData.append("images", img));
-
-      const res = await fetch("/api/admin/products", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (res.ok) {
-        alert("Product added successfully!");
-        setProduct({
-          name: "",
-          price: "",
-          salePrice: "",
-          shortDesc: "",
-          longDesc: "",
-          brand: "",
-          category: "",
-          images: [],
-          isTodayDeal: false,
-          stock: "",
-        });
-      } else {
-        const data = await res.json();
-        alert("Failed: " + data.error);
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Something went wrong");
+    // ✅ Always send salePrice as number, or skip if empty
+    if (product.salePrice && product.salePrice.trim() !== "") {
+      formData.append("salePrice", String(Number(product.salePrice)));
     }
-  };
+
+    formData.append("shortDesc", product.shortDesc);
+    formData.append("longDesc", product.longDesc);
+    formData.append("brand", product.brand);
+    formData.append("category", product.category);
+    formData.append("isTodayDeal", product.isTodayDeal ? "true" : "false");
+
+    // ✅ Stock as number
+    formData.append("stock", String(Number(product.stock)));
+
+    product.images.forEach((img) => formData.append("images", img));
+
+    const res = await fetch("/api/admin/products", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (res.ok) {
+      alert("Product added successfully!");
+      setProduct({
+        name: "",
+        price: "",
+        salePrice: "",
+        shortDesc: "",
+        longDesc: "",
+        brand: "",
+        category: "",
+        images: [],
+        isTodayDeal: false,
+        stock: "",
+      });
+    } else {
+      const data = await res.json();
+      alert("Failed: " + data.error);
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Something went wrong");
+  }
+};
+
 
   return (
     <div className="max-w-2xl mx-auto p-6 bg-white shadow rounded">

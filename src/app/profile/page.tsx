@@ -1,7 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation"; // ✅ Import this
 
-
 import { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import {
@@ -57,7 +56,7 @@ interface WishlistItem {
 }
 
 export default function ProfileDashboard() {
-    const router = useRouter(); // ✅ initialize router
+  const router = useRouter(); // ✅ initialize router
 
   const { user, setUser } = useContext(UserContext);
   const [orders, setOrders] = useState<Order[]>([]);
@@ -68,34 +67,38 @@ export default function ProfileDashboard() {
   const [selectedTab, setSelectedTab] = useState<
     "dashboard" | "orders" | "wishlist" | "addresses" | "logout"
   >("dashboard");
-useEffect(() => {
-  async function loadData() {
-    const token = localStorage.getItem("token"); // ✅ get token
-    if (!token) return; // optional: stop if no token
+  useEffect(() => {
+    async function loadData() {
+      const token = localStorage.getItem("token"); // ✅ get token
+      if (!token) return; // optional: stop if no token
 
-    const config = { headers: { Authorization: `Bearer ${token}` } };
+      const config = { headers: { Authorization: `Bearer ${token}` } };
 
-    try {
-      const [userRes, ordersRes, addressesRes, wishlistRes] = await Promise.all([
-        axios.get<{ user: User }>("/api/user/profile", config),
-        axios.get<Order[]>("/api/orders", config),
-        axios.get<{ addresses: Address[] }>("/api/user/addresses", config),
-        axios.get<{ wishlist: WishlistItem[] }>("/api/user/wishlist", config),
-      ]);
+      try {
+        const [userRes, ordersRes, addressesRes, wishlistRes] =
+          await Promise.all([
+            axios.get<{ user: User }>("/api/user/profile", config),
+            axios.get<Order[]>("/api/orders", config),
+            axios.get<{ addresses: Address[] }>("/api/user/addresses", config),
+            axios.get<{ wishlist: WishlistItem[] }>(
+              "/api/user/wishlist",
+              config
+            ),
+          ]);
 
-      setUser(userRes.data.user);
-      setOrders(ordersRes.data);
-      setAddresses(addressesRes.data.addresses);
-      setWishlist(wishlistRes.data.wishlist);
-    } catch (err) {
-      console.error("Failed to fetch dashboard data", err);
-    } finally {
-      setLoading(false);
+        setUser(userRes.data.user);
+        setOrders(ordersRes.data);
+        setAddresses(addressesRes.data.addresses);
+        setWishlist(wishlistRes.data.wishlist);
+      } catch (err) {
+        console.error("Failed to fetch dashboard data", err);
+      } finally {
+        setLoading(false);
+      }
     }
-  }
 
-  loadData();
-}, []);
+    loadData();
+  }, []);
 
   useEffect(() => {
     async function loadData() {
@@ -107,20 +110,21 @@ useEffect(() => {
           return;
         }
 
-        const [userRes, ordersRes, addressesRes, wishlistRes] = await Promise.all([
-          axios.get<{ user: User }>("/api/user/profile", {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          axios.get<Order[]>("/api/orders", {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          axios.get<{ addresses: Address[] }>("/api/user/addresses", {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          axios.get<{ wishlist: WishlistItem[] }>("/api/user/wishlist", {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-        ]);
+        const [userRes, ordersRes, addressesRes, wishlistRes] =
+          await Promise.all([
+            axios.get<{ user: User }>("/api/user/profile", {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
+            axios.get<Order[]>("/api/orders", {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
+            axios.get<{ addresses: Address[] }>("/api/user/addresses", {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
+            axios.get<{ wishlist: WishlistItem[] }>("/api/user/wishlist", {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
+          ]);
 
         setUser(userRes.data.user);
         setOrders(ordersRes.data);
@@ -139,15 +143,34 @@ useEffect(() => {
   if (loading)
     return <p className="text-center text-xl py-12">Loading Dashboard...</p>;
 
- 
   const SIDEBAR_ITEMS = [
     { label: "Dashboard", key: "dashboard", icon: <FaRegUser /> },
-{ 
-      label: "Orders", 
-      key: "orders", 
+    {
+      label: "Orders",
+      key: "orders",
       icon: <FaBoxOpen />,
       action: () => router.push("/orders"), // ✅ redirect to /orders
-    },    { label: "Wishlist", key: "wishlist", icon: <FaHeart /> },
+    },
+    {
+      label: "Wishlist",
+      key: "wishlist",
+      icon: <FaHeart />,
+      action: () => router.push("/wishlist"), // ✅ redirect to /wishlist
+    },
+    {
+      label: " My Coupons",
+      key: "coupon",
+      icon: <FaHeart />,
+      action: () => router.push("/coupon"), // ✅ redirect to /coupon
+    },
+
+        {
+      label: " Notification",
+      key: "Notification",
+      icon: <FaHeart />,
+      action: () => router.push("/Notification"), // ✅ redirect to /coupon
+    },
+
     {
       label: "Logout",
       key: "logout",
@@ -162,7 +185,10 @@ useEffect(() => {
       <aside className="w-64 bg-white border-r flex flex-col">
         <div className="py-8 px-6 border-b flex flex-col items-center">
           <div className="bg-blue-600 text-white rounded-full w-16 h-16 flex items-center justify-center text-2xl font-bold mb-2">
-            {user?.name?.split(" ").map((n) => n[0]).join("") || <FaRegUser />}
+            {user?.name
+              ?.split(" ")
+              .map((n) => n[0])
+              .join("") || <FaRegUser />}
           </div>
           <div className="mt-1 font-semibold text-gray-800">{user?.name}</div>
           <div className="text-xs text-gray-500">{user?.email}</div>
@@ -222,8 +248,6 @@ useEffect(() => {
                 </p>
               </div>
             </div>
-
-           
           </>
         )}
 
@@ -274,11 +298,11 @@ useEffect(() => {
 
                         {/* Products inside order */}
                         {order.products.map((product) => (
-                          <tr
-                            key={product.id}
-                            className="border-t bg-gray-50"
-                          >
-                            <td colSpan={2} className="p-2 flex items-center gap-2">
+                          <tr key={product.id} className="border-t bg-gray-50">
+                            <td
+                              colSpan={2}
+                              className="p-2 flex items-center gap-2"
+                            >
                               <img
                                 src={product.imageUrl}
                                 alt={product.name}

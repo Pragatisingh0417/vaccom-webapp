@@ -4,6 +4,14 @@ import { useCart } from "@/context/CartContext";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
+// ✅ Currency formatter
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(amount);
+};
+
 export default function CartPage() {
   const router = useRouter();
   const { cart, removeFromCart, clearCart, increaseQuantity, decreaseQuantity } =
@@ -38,10 +46,9 @@ export default function CartPage() {
               className="flex flex-col sm:flex-row sm:items-center justify-between p-5 hover:bg-gray-50"
             >
               <div className="flex items-center gap-5">
-                {/* ✅ fixed: use item.image instead of imageUrl */}
                 <div className="w-24 h-24 relative flex-shrink-0">
                   <Image
-                    src={item.imageUrl  || "/placeholder.png"}
+                    src={item.imageUrl || "/placeholder.png"}
                     alt={item.name}
                     fill
                     className="object-contain rounded-md"
@@ -52,10 +59,10 @@ export default function CartPage() {
                 <div>
                   <h2 className="text-lg font-semibold">{item.name}</h2>
                   <p className="text-gray-600">
-                    Price: ₹{item.price.toFixed(2)}
+                    Price: {formatCurrency(item.price)}
                   </p>
                   <p className="text-red-600 font-bold">
-                    Subtotal: ₹{(item.price * item.quantity).toFixed(2)}
+                    Subtotal: {formatCurrency(item.price * item.quantity)}
                   </p>
                   <div className="flex items-center gap-2 mt-2">
                     <button
@@ -99,7 +106,7 @@ export default function CartPage() {
 
         <div className="text-right">
           <p className="text-lg font-semibold">
-            Total: <span className="text-green-600">₹{total.toFixed(2)}</span>
+            Total: <span className="text-green-600">{formatCurrency(total)}</span>
           </p>
           <button
             onClick={() => router.push("/checkout")}

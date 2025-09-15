@@ -13,7 +13,6 @@ type Country = { name?: { common?: string } };
 
 export default function CheckoutPage() {
   const { cart } = useCart();
-
   const [countries, setCountries] = useState<string[]>([]);
   const [countryLoading, setCountryLoading] = useState(true);
   const [countryError, setCountryError] = useState<string | null>(null);
@@ -34,17 +33,18 @@ export default function CheckoutPage() {
   const [couponMessage, setCouponMessage] = useState<string | null>(null);
   const [couponError, setCouponError] = useState<string | null>(null);
 
-  // Calculate subtotal
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-  // Shipping logic: free above $149 for AU & NZ
-  const shipping =
-    (selectedCountry === "Australia" || selectedCountry === "New Zealand") && subtotal >= 149
-      ? 0
-      : 10; // default shipping $10
-  const delivery = 0;
-  const total = subtotal + shipping + delivery;
-  const totalAmount = appliedCoupon ? appliedCoupon.finalAmount + shipping : total;
+  // Shipping rules
+  const shipping = (() => {
+    const totalAmount = appliedCoupon ? appliedCoupon.finalAmount : subtotal;
+    if (selectedCountry === "Australia" || selectedCountry === "New Zealand") {
+      return totalAmount >= 149 ? 0 : 11.95; // Free shipping >= $149, else $10
+    }
+    return 15; // default shipping for other countries
+  })();
+
+  const total = (appliedCoupon ? appliedCoupon.finalAmount : subtotal) + shipping;
 
   // Apply coupon
   const handleApplyCoupon = async () => {
@@ -74,7 +74,6 @@ export default function CheckoutPage() {
         discount: data.discount,
         finalAmount: data.finalAmount,
       });
-
       setCouponMessage(`✅ Coupon applied! You saved $${data.discount.toFixed(2)}`);
       setCouponError(null);
     } catch (err: any) {
@@ -174,9 +173,7 @@ export default function CheckoutPage() {
               >
                 <option value="">{countryLoading ? "Loading countries..." : "Select Country"}</option>
                 {!countryLoading &&
-                  countries.map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
+                  countries.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
               {countryError && <p className="text-sm text-red-600 mt-1">{countryError}</p>}
             </div>
@@ -190,14 +187,17 @@ export default function CheckoutPage() {
                   disabled={stateLoading}
                 >
                   <option value="">{stateLoading ? "Loading states..." : "Select State"}</option>
-                  {states.map((s) => (
-                    <option key={s} value={s}>{s}</option>
-                  ))}
+                  {states.map((s) => <option key={s} value={s}>{s}</option>)}
                 </select>
               ) : (
                 <input
                   type="text"
-                  placeholder={stateLoading ? "Loading states..." : stateError ? "Type your state/region" : selectedCountry ? "No states found – type your state/region" : "Select country first"}
+                  placeholder={
+                    stateLoading ? "Loading states..." :
+                    stateError ? "Type your state/region" :
+                    selectedCountry ? "No states found – type your state/region" :
+                    "Select country first"
+                  }
                   className="border p-3 rounded-md w-full"
                   disabled={!selectedCountry || stateLoading}
                   value={selectedState}
@@ -205,9 +205,6 @@ export default function CheckoutPage() {
                 />
               )}
             </div>
-            <input type="text" placeholder="Street Address" className="border p-3 rounded-md w-full md:col-span-2" />
-            <input type="text" placeholder="City" className="border p-3 rounded-md w-full" />
-            <input type="text" placeholder="Zip / PIN Code" className="border p-3 rounded-md w-full" />
           </form>
 
           {/* Coupon input */}
@@ -227,7 +224,14 @@ export default function CheckoutPage() {
             {couponError && <p className="text-sm mt-1 text-red-600">{couponError}</p>}
           </div>
 
-          <CheckoutForm cart={cart} email={email} totalAmount={totalAmount} />
+          <CheckoutForm
+            email={email}
+            totalAmount={total}
+            cart={cart}
+            shipping={shipping}
+            appliedCoupon={appliedCoupon}
+            selectedCountry={selectedCountry}
+          />
         </div>
 
         {/* Right: Order Summary */}
@@ -253,9 +257,9 @@ export default function CheckoutPage() {
 
           <div className="mt-4 space-y-2 text-sm">
             <div className="flex justify-between"><span>Subtotal</span><span>${subtotal.toFixed(2)}</span></div>
-            <div className="flex justify-between"><span>Delivery</span><span className={shipping === 0 ? "text-green-600 font-semibold" : ""}>{shipping === 0 ? "FREE" : `$${shipping.toFixed(2)}`}</span></div>
+            <div className="flex justify-between"><span>Shipping</span><span className="text-green-600 font-semibold">{shipping === 0 ? "FREE" : `$${shipping.toFixed(2)}`}</span></div>
             {appliedCoupon && <div className="flex justify-between text-green-700 font-semibold"><span>Coupon ({appliedCoupon.code})</span><span>- ${appliedCoupon.discount.toFixed(2)}</span></div>}
-            <div className="flex justify-between text-lg font-bold border-t pt-2"><span>Total</span><span>${totalAmount.toFixed(2)}</span></div>
+            <div className="flex justify-between text-lg font-bold border-t pt-2"><span>Total</span><span>${total.toFixed(2)}</span></div>
           </div>
         </div>
       </div>

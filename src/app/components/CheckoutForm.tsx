@@ -5,42 +5,68 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 
-type CheckoutFormProps = {
-  cart: any[];
-  email: string;
-  totalAmount: number;
+type CartItem = {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+  imageUrl?: string;
 };
 
-export default function CheckoutForm({ cart, email, totalAmount }: CheckoutFormProps) {
+type CheckoutFormProps = {
+  email: string;
+  cart: CartItem[];
+  totalAmount: number;
+  shipping: number;
+  appliedCoupon?: { code: string; discount: number; finalAmount: number } | null;
+  selectedCountry?: string;
+};
+
+export default function CheckoutForm({
+  email,
+  cart,
+  appliedCoupon,
+  selectedCountry,
+  shipping,
+}: CheckoutFormProps) {
   const { clearCart } = useCart();
   const stripe = useStripe();
   const elements = useElements();
   const router = useRouter();
   const [processing, setProcessing] = useState(false);
 
+  const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const totalAmount = (appliedCoupon ? appliedCoupon.finalAmount : subtotal) + shipping;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!stripe || !elements) return;
 
     setProcessing(true);
+
     const card = elements.getElement(CardElement);
-    if (!card) {
-      setProcessing(false);
-      return;
-    }
+    if (!card) return;
 
     try {
-      // 1️⃣ Create PaymentIntent on backend
+      // 1️⃣ Create PaymentIntent
       const checkoutRes = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount: totalAmount * 100, currency: "usd" }), // amount in cents
+        body: JSON.stringify({ amount: totalAmount * 100, currency: "usd" }),
       });
-
       if (!checkoutRes.ok) throw new Error("Failed to create PaymentIntent");
-      const { clientSecret } = await checkoutRes.json();
 
-      // 2️⃣ Confirm payment with Stripe
+      const { clientSecret }: { clientSecret: string } = await checkoutRes.json();
+
+      // Store details locally in case of failure
+      localStorage.setItem("latestPaymentId", clientSecret);
+      localStorage.setItem("userEmail", email);
+      localStorage.setItem("selectedCountry", selectedCountry || "");
+      localStorage.setItem("appliedCoupon", JSON.stringify(appliedCoupon));
+      localStorage.setItem("shipping", shipping.toString());
+      localStorage.setItem("cartItems", JSON.stringify(cart));
+
+      // 2️⃣ Confirm payment
       const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
         payment_method: {
           card,
@@ -48,46 +74,42 @@ export default function CheckoutForm({ cart, email, totalAmount }: CheckoutFormP
         },
       });
 
-      if (error) {
-        console.error("❌ Payment failed:", error.message);
-        router.push("/cancel");
+      if (error || paymentIntent?.status !== "succeeded") {
+        router.push("/cancel"); // failure handled there
         return;
       }
 
-      if (paymentIntent.status === "succeeded") {
-        // 3️⃣ Create order in your database
-        const orderRes = await fetch("/api/orders", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-          body: JSON.stringify({
-            items: cart.map((item) => ({
-              productId: item.id,
-              name: item.name,
-              price: item.price,
-              qty: item.quantity,
-              image: item.imageUrl || "/placeholder.png",
-            })),
-            amount: totalAmount,
-            currency: "usd",
-            paymentId: paymentIntent.id,
-            userEmail: email,
-          }),
-        });
+      // 3️⃣ Payment succeeded → create order as pending
+      const orderRes = await fetch("/api/orders", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({
+          items: cart.map((item) => ({
+            productId: item.id,
+            name: item.name,
+            price: item.price,
+            qty: item.quantity,
+            image: item.imageUrl || "/placeholder.png",
+          })),
+          amount: totalAmount,
+          currency: "usd",
+          paymentId: paymentIntent.id,
+          email,
+          shipping,
+          coupon: appliedCoupon?.code || null,
+          selectedCountry,
+        }),
+      });
 
-        if (!orderRes.ok) throw new Error("Failed to save order");
-        const data = await orderRes.json();
+      if (!orderRes.ok) throw new Error("Failed to save order");
+      const data = await orderRes.json();
 
-        if (data.success) {
-          const orderWithEmail = { ...data.order, userEmail: email };
-          localStorage.setItem("latestOrder", JSON.stringify(orderWithEmail));
-
-          // 4️⃣ Clear cart & redirect to success
-          clearCart();
-          router.push("/success");
-        }
+      if (data.success) {
+        clearCart();
+        router.push("/success");
       }
     } catch (err: any) {
       console.error("❌ Checkout error:", err.message);
@@ -98,14 +120,13 @@ export default function CheckoutForm({ cart, email, totalAmount }: CheckoutFormP
   };
 
   return (
-    <form className="space-y-6 mt-6" onSubmit={handleSubmit}>
+    <form className="space-y-6" onSubmit={handleSubmit}>
       <div>
         <label className="block text-sm font-medium mb-1">Card Details</label>
         <div className="border p-3 rounded-md">
           <CardElement />
         </div>
       </div>
-
       <button
         type="submit"
         disabled={!stripe || processing}

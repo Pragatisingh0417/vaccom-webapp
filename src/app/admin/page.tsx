@@ -14,6 +14,7 @@ import OrdersList from "./cms/orders/orders-list/OrdersList";
 import AllUsersPage from "./cms/all-users/page";
 import CreateAdminPage from "./create-admin/page";
 import RecentOrders from "../components/RecentOrders";
+import NotificationsAdminPage from "./cms/notifications/page";
 import {
   LineChart,
   Line,
@@ -140,6 +141,10 @@ export default function AdminDashboard() {
         "order_manager",
         "marketing_manager",
       ],
+      notifications : [
+         "superadmin",
+
+      ]
     };
 
     return accessMatrix[module]?.includes(role);
@@ -268,6 +273,14 @@ export default function AdminDashboard() {
             collapsed={collapsed}
           />
 
+          <NavLink
+            onClick={() => setActiveTab("notifications")}
+            label="Notifications"
+            icon={<Tags />}
+            active={activeTab === "notifications"}
+            collapsed={collapsed}
+          />
+
           {hasAccess("users") && (
             <NavLink
               onClick={() => setActiveTab("users")}
@@ -357,7 +370,8 @@ export default function AdminDashboard() {
         {activeTab === "view-coupons" && hasAccess("view-coupons") && (
           <ViewCoupons />
         )}
-        {/* {activeTab === "users" && hasAccess("users") && <TabContent title="Users" />} */}
+        {activeTab === "notifications" && hasAccess("notifications") &&     <NotificationsAdminPage /> }
+
         {activeTab === "users" && hasAccess("users") && <AllUsersPage />}
         {activeTab === "create-admin" && hasAccess("create-admin") && (
           <CreateAdminPage />

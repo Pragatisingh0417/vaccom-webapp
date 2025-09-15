@@ -8,6 +8,7 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
+// Display-friendly brand name
 function normalizeSlug(slug: string) {
   return decodeURIComponent(slug)
     .replace(/-/g, " ")
@@ -21,16 +22,20 @@ export default function BrandPage({ params }: Props) {
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<"grid" | "list">("grid");
   const [sort, setSort] = useState("");
+  const [brandName, setBrandName] = useState<string>("");
 
   useEffect(() => {
     async function fetchProducts() {
       const { slug: rawSlug } = await params;
-      const normalizedSlug = normalizeSlug(rawSlug);
+
+      // ✅ Use lowercase slug for API
+      const apiSlug = rawSlug.toLowerCase();
+
+      // ✅ Display-friendly brand name
+      setBrandName(normalizeSlug(apiSlug));
 
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "";
-      const apiUrl = `${baseUrl}/api/products?brand=${encodeURIComponent(normalizedSlug)}`;
-
-      console.log("Fetching products from:", apiUrl);
+      const apiUrl = `${baseUrl}/api/products?brand=${encodeURIComponent(apiSlug)}`;
 
       try {
         const res = await fetch(apiUrl, { cache: "no-store" });
@@ -55,15 +60,15 @@ export default function BrandPage({ params }: Props) {
       <div className="bg-[url('https://vaccom.com.au/wp-content/uploads/2025/06/VACCUM-GP-2.jpg')] bg-cover bg-center h-64 md:h-72 flex items-center">
         <div className="flex flex-col justify-center ml-6 md:ml-12">
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">
-            {products[0]?.brand || "Brand"}
+            {brandName || "Brand"}
           </h1>
           <span className="text-white text-xl md:text-2xl">
-            Brand: {products[0]?.brand}
+            Brand: {brandName}
           </span>
         </div>
       </div>
 
-      {/* ✅ Toolbar */}
+      {/* Toolbar */}
       <div className="max-w-6xl mx-auto p-6">
         <ProductToolbar
           results={products.length}

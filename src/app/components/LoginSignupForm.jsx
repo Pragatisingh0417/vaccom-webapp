@@ -81,6 +81,8 @@ export default function LoginSignupForm() {
   const token = data.token || data.accessToken || data.data?.token   || null;
 
   if (user)  localStorage.setItem('user', JSON.stringify(user));
+  window.dispatchEvent(new Event("userUpdated")); // 🔔 trigger event
+
   if (token) localStorage.setItem('token', token);
 
   // Redirect after success

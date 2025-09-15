@@ -5,10 +5,9 @@ import { useState, useRef, useEffect } from 'react';
 import { FiMapPin, FiMail, FiPhone, FiShoppingCart } from 'react-icons/fi';
 import { FaUser, FaHeart } from 'react-icons/fa';
 import Link from "next/link";
-import { useRouter } from "next/navigation";   // ✅ Import router
+import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import CartDrawer from "./CartDrawer";
-// import { getStoredUser, clearAuth } from '../api/auth/login';
 
 export default function ContactHeader() {
   const { cart } = useCart();
@@ -18,46 +17,55 @@ export default function ContactHeader() {
   const profileRef = useRef();
 
   const [isOpen, setIsOpen] = useState(false);
-  const [user, setUser] = useState(null);  // ✅ Keep only one user state
+  const [user, setUser] = useState(null);
 
   const router = useRouter();
+
   // ✅ Get user from localStorage
-const getStoredUser = () => {
-  if (typeof window !== "undefined") {
-    const stored = localStorage.getItem("user");
-    return stored ? JSON.parse(stored) : null;
-  }
-  return null;
-};
+  const getStoredUser = () => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("user");
+      return stored ? JSON.parse(stored) : null;
+    }
+    return null;
+  };
 
-// ✅ Clear user (logout)
-const clearAuth = () => {
-  if (typeof window !== "undefined") {
-    localStorage.removeItem("user");
-  }
-};
+  // ✅ Clear user (logout)
+  const clearAuth = () => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("user");
+    }
+  };
 
-
-  // Load user from localStorage on mount
+  // ✅ Load and sync user
   useEffect(() => {
-    setUser(getStoredUser());
+    const updateUser = () => setUser(getStoredUser());
 
-    // Keep multiple tabs in sync
-    const onStorage = () => setUser(getStoredUser());
-    window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
+    // Run once on mount
+    updateUser();
+
+    // Keep multiple tabs + login sync
+    window.addEventListener("storage", updateUser);
+    window.addEventListener("userUpdated", updateUser);
+
+    return () => {
+      window.removeEventListener("storage", updateUser);
+      window.removeEventListener("userUpdated", updateUser);
+    };
   }, []);
-  
-const logout = async () => {
-  try {
-    await fetch("/api/auth/logout", { method: "POST" });
-    clearAuth(); // your existing cleanup function
-    setUser(null);
-    router.push("/auth");
-  } catch (error) {
-    console.error("Logout failed:", error);
-  }
-};
+
+  const logout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      clearAuth();
+      setUser(null);
+      router.push("/auth");
+      // notify all listeners
+      window.dispatchEvent(new Event("userUpdated"));
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
 
   // Close profile dropdown on outside click
   useEffect(() => {
@@ -71,7 +79,7 @@ const logout = async () => {
   }, []);
 
   return (
-    <div className="bg-blue-50 border-b">
+    <div className="bg-blue-50 border-b sticky top-0 z-50">
       <div className="px-4 py-3 flex flex-col md:flex-row justify-between items-center max-w-7xl mx-auto gap-4">
         {/* Logo */}
         <div className="flex items-center gap-4">
@@ -106,26 +114,34 @@ const logout = async () => {
         {/* Icons: Wishlist + Profile + Cart */}
         <div className="flex items-center gap-6 relative">
           {/* Wishlist */}
-          <Link href="/wishlist" aria-label="Wishlist" className="text-2xl text-red-700  hover:text-red-600 transition">
+          <Link href="/wishlist" aria-label="Wishlist" className="text-2xl text-red-700 hover:text-red-600 transition">
             <FaHeart />
           </Link>
 
           {/* Profile with dropdown */}
-          <div ref={profileRef} className="relative cursor-pointer text-2xl hover:text-black text-black">
-            <span
+          <div ref={profileRef} className="relative cursor-pointer text-lg text-black">
+            <div
               tabIndex={0}
-              aria-label="User menu"
               role="button"
+              className="flex items-center gap-2 hover:text-red-600"
               onClick={() => setProfileDropdownOpen((open) => !open)}
-              onKeyDown={e => {
+              onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault();
                   setProfileDropdownOpen((open) => !open);
                 }
               }}
             >
-              <FaUser />
-            </span>
+              <FaUser className="text-xl" />
+              {user ? (
+                <>
+                  <span className="font-medium">{user.name}</span>
+                  <span className="text-sm">▼</span>
+                </>
+              ) : (
+                <span className="font-medium">Login</span>
+              )}
+            </div>
 
             {profileDropdownOpen && (
               <div className="absolute right-0 top-full text-base mt-2 w-72 bg-white text-black rounded shadow-lg z-20 py-2 px-3">
@@ -133,36 +149,18 @@ const logout = async () => {
                   <>
                     <span className="text-gray-700">Welcome, <b>{user.name}</b> 👋</span>
                     <p className="text-sm text-gray-500">Manage your account</p>
-                    <Link href="/profile" className="block px-4 py-2 hover:bg-gray-100">
-                      Your Profile
-                    </Link>
-                    <Link href="/orders" className="block px-4 py-2 hover:bg-gray-100">
-                      Orders
-                    </Link>
-                     <Link href="/wishlist" className="block px-4 py-2 hover:bg-gray-100">
-                      Wishlist
-                    </Link>
-                     <Link href="/coupon" className="block px-4 py-2 hover:bg-gray-100">
-                      Coupon
-                    </Link>
-                    
-                    <Link href="/notification" className="block px-4 py-2 hover:bg-gray-100">
-                      Notification
-                    </Link>
-                    <button
-                      onClick={logout}
-                      className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                    >
-                      Logout
-                    </button>
+                    <Link href="/profile" className="block px-4 py-2 hover:bg-gray-100">Your Profile</Link>
+                    <Link href="/orders" className="block px-4 py-2 hover:bg-gray-100">Orders</Link>
+                    <Link href="/wishlist" className="block px-4 py-2 hover:bg-gray-100">Wishlist</Link>
+                    <Link href="/coupon" className="block px-4 py-2 hover:bg-gray-100">Coupon</Link>
+                    <Link href="/notifications" className="block px-4 py-2 hover:bg-gray-100">Notification</Link>
+                    <button onClick={logout} className="block w-full text-left px-4 py-2 hover:bg-gray-100">Logout</button>
                   </>
                 ) : (
                   <>
                     <h6 className="text-gray-600 font-semibold">Welcome</h6>
                     <p>To manage account and access orders</p>
-                    <Link href="/auth" className="block px-4 py-2 hover:bg-gray-100">
-                      Login / Signup
-                    </Link>
+                    <Link href="/auth" className="block px-4 py-2 hover:bg-gray-100">Login / Signup</Link>
                   </>
                 )}
               </div>
@@ -171,14 +169,8 @@ const logout = async () => {
 
           {/* Cart */}
           <div>
-            <button
-              className="relative inline-block"
-              onClick={() => setIsOpen(true)}
-            >
-              <FiShoppingCart
-                size={24}
-                className="hover:text-black cursor-pointer text-gray-700"
-              />
+            <button className="relative inline-block" onClick={() => setIsOpen(true)}>
+              <FiShoppingCart size={24} className="hover:text-black cursor-pointer text-gray-700" />
               {totalItems > 0 && (
                 <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
                   {totalItems}
