@@ -15,6 +15,7 @@ interface Product {
   shortDesc?: string;
   longDesc?: string;
   price: number;
+  salePrice?: number; // ✅ added for sale support
   images: string[];
   features?: string[];
   rating?: number;
@@ -28,8 +29,8 @@ export default function ProductDetail() {
   const [quantity, setQuantity] = useState(1);
   const [inWishlist, setInWishlist] = useState(false);
   const [showReviews, setShowReviews] = useState(false);
-  const [notify, setNotify] = useState(""); 
-  const [notifyColor, setNotifyColor] = useState("green"); 
+  const [notify, setNotify] = useState("");
+  const [notifyColor, setNotifyColor] = useState("green");
   const [mainImage, setMainImage] = useState<string>("");
   const [showModal, setShowModal] = useState(false);
 
@@ -46,7 +47,9 @@ export default function ProductDetail() {
         const data = await res.json();
         setProduct(data);
         setMainImage(
-          data.images && data.images.length > 0 ? data.images[0] : "/placeholder.png"
+          data.images && data.images.length > 0
+            ? data.images[0]
+            : "/placeholder.png"
         );
       } catch (err) {
         console.error(err);
@@ -128,13 +131,13 @@ export default function ProductDetail() {
             onClick={() => setShowModal(true)}
           />
 
-          {/* Thumbnails / hover images */}
+          {/* Thumbnails */}
           <div className="flex gap-2 mt-2">
             {product.images.map((img, idx) => (
               <img
                 key={idx}
                 src={img}
-                alt={`Thumbnail ${idx}`}
+                alt={`${product.name} - ${idx}`}
                 className="w-16 h-16 object-cover rounded-lg border cursor-pointer hover:border-blue-500"
                 onMouseEnter={() => setMainImage(img)}
                 onClick={() => setMainImage(img)}
@@ -145,21 +148,53 @@ export default function ProductDetail() {
 
         {/* Right: Product Info */}
         <div className="md:w-1/2 flex flex-col gap-3">
+          {/* On Sale Badge */}
+          {product.salePrice && (
+            <span className="bg-red-600 text-white px-3 py-1 rounded-full text-sm font-semibold w-max">
+              ON SALE
+            </span>
+          )}
+
           <h1 className="text-3xl font-bold">{product.name}</h1>
 
           {product.shortDesc && (
             <p className="text-gray-700">{product.shortDesc}</p>
           )}
 
+          {/* Rating */}
           <div className="flex items-center gap-2 text-yellow-500">
             {Array.from({ length: 5 }, (_, i) => (
-              <FaStar key={i} className="text-yellow-400" />
+              <FaStar
+                key={i}
+                className={
+                  i < (product.rating || 0)
+                    ? "text-yellow-400"
+                    : "text-gray-300"
+                }
+              />
             ))}
             <span className="text-gray-600 ml-2">{product.sold || 0} sold</span>
           </div>
 
-          <p className="text-2xl font-bold text-red-600">${product.price}</p>
+          {/* Price */}
+          <div className="flex items-center gap-2 mt-2">
+            {product.salePrice ? (
+              <>
+                <span className="text-gray-500 line-through text-lg">
+                  ${product.salePrice}
+                </span>
+                <span className="text-2xl font-bold text-red-600">
+                  ${product.price}
+                </span>
+              </>
+            ) : (
+              <span className="text-2xl font-bold text-red-600">
+                ${product.price}
+              </span>
+            )}
+          </div>
 
+          {/* Features */}
           {product.features && (
             <ul className="list-disc list-inside text-red-700">
               {product.features.map((feature, idx) => (
@@ -209,6 +244,7 @@ export default function ProductDetail() {
         </div>
       </div>
 
+      {/* Long Description */}
       {product.longDesc && (
         <div className="mt-10">
           <h2 className="text-2xl font-semibold mb-3">Product Details</h2>
@@ -216,6 +252,7 @@ export default function ProductDetail() {
         </div>
       )}
 
+      {/* Reviews Toggle */}
       <div className="mt-6">
         <button
           onClick={() => setShowReviews((prev) => !prev)}
@@ -226,12 +263,14 @@ export default function ProductDetail() {
 
         {showReviews && (
           <div className="mt-4 border-t pt-4">
-            <p className="text-gray-700">No reviews yet. Be the first to review!</p>
+            <p className="text-gray-700">
+              No reviews yet. Be the first to review!
+            </p>
           </div>
         )}
       </div>
 
-      {/* Modal for viewing all images */}
+      {/* Modal for all images */}
       <AnimatePresence>
         {showModal && (
           <motion.div
@@ -252,7 +291,7 @@ export default function ProductDetail() {
                 <img
                   key={idx}
                   src={img}
-                  alt={`Image ${idx}`}
+                  alt={`${product.name} - ${idx}`}
                   className="mb-2 w-full object-contain rounded"
                 />
               ))}

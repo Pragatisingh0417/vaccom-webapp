@@ -1,6 +1,5 @@
 "use client";
-import { useRouter } from "next/navigation"; // ✅ Import this
-
+import { useRouter } from "next/navigation";
 import { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import {
@@ -15,10 +14,16 @@ import { UserContext } from "@/context/UserContext";
 
 interface User {
   id: number;
+  name?: string;
+  email?: string;
+  phone?: string;
+  avatarUrl?: string;
+}
+
+interface EditableUser {
   name: string;
   email: string;
   phone: string;
-  avatarUrl?: string;
 }
 
 interface OrderProduct {
@@ -56,49 +61,24 @@ interface WishlistItem {
 }
 
 export default function ProfileDashboard() {
-  const router = useRouter(); // ✅ initialize router
-
+  const router = useRouter();
   const { user, setUser } = useContext(UserContext);
+
   const [orders, setOrders] = useState<Order[]>([]);
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
   const [loading, setLoading] = useState(true);
-
   const [selectedTab, setSelectedTab] = useState<
-    "dashboard" | "orders" | "wishlist" | "addresses" | "logout"
+    "dashboard" | "orders" | "wishlist" | "addresses"
   >("dashboard");
-  useEffect(() => {
-    async function loadData() {
-      const token = localStorage.getItem("token"); // ✅ get token
-      if (!token) return; // optional: stop if no token
 
-      const config = { headers: { Authorization: `Bearer ${token}` } };
-
-      try {
-        const [userRes, ordersRes, addressesRes, wishlistRes] =
-          await Promise.all([
-            axios.get<{ user: User }>("/api/user/profile", config),
-            axios.get<Order[]>("/api/orders", config),
-            axios.get<{ addresses: Address[] }>("/api/user/addresses", config),
-            axios.get<{ wishlist: WishlistItem[] }>(
-              "/api/user/wishlist",
-              config
-            ),
-          ]);
-
-        setUser(userRes.data.user);
-        setOrders(ordersRes.data);
-        setAddresses(addressesRes.data.addresses);
-        setWishlist(wishlistRes.data.wishlist);
-      } catch (err) {
-        console.error("Failed to fetch dashboard data", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadData();
-  }, []);
+  // Modal state
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [formData, setFormData] = useState<EditableUser>({
+    name: "",
+    email: "",
+    phone: "",
+  });
 
   useEffect(() => {
     async function loadData() {
@@ -110,19 +90,17 @@ export default function ProfileDashboard() {
           return;
         }
 
+        const headers = { Authorization: `Bearer ${token}` };
+
         const [userRes, ordersRes, addressesRes, wishlistRes] =
           await Promise.all([
-            axios.get<{ user: User }>("/api/user/profile", {
-              headers: { Authorization: `Bearer ${token}` },
-            }),
-            axios.get<Order[]>("/api/orders", {
-              headers: { Authorization: `Bearer ${token}` },
-            }),
+            axios.get<{ user: User }>("/api/user/profile", { headers }),
+            axios.get<Order[]>("/api/orders", { headers }),
             axios.get<{ addresses: Address[] }>("/api/user/addresses", {
-              headers: { Authorization: `Bearer ${token}` },
+              headers,
             }),
             axios.get<{ wishlist: WishlistItem[] }>("/api/user/wishlist", {
-              headers: { Authorization: `Bearer ${token}` },
+              headers,
             }),
           ]);
 
@@ -138,46 +116,60 @@ export default function ProfileDashboard() {
     }
 
     loadData();
-  }, []);
+  }, [setUser]);
 
   if (loading)
     return <p className="text-center text-xl py-12">Loading Dashboard...</p>;
 
   const SIDEBAR_ITEMS = [
     { label: "Dashboard", key: "dashboard", icon: <FaRegUser /> },
+    { label: "Orders", key: "orders", icon: <FaBoxOpen /> },
+    { label: "Wishlist", key: "wishlist", icon: <FaHeart /> },
     {
-      label: "Orders",
-      key: "orders",
-      icon: <FaBoxOpen />,
-      action: () => router.push("/orders"), // ✅ redirect to /orders
-    },
-    {
-      label: "Wishlist",
-      key: "wishlist",
-      icon: <FaHeart />,
-      action: () => router.push("/wishlist"), // ✅ redirect to /wishlist
-    },
-    {
-      label: " My Coupons",
+      label: "My Coupons",
       key: "coupon",
       icon: <FaHeart />,
-      action: () => router.push("/coupon"), // ✅ redirect to /coupon
+      action: () => router.push("/coupon"),
     },
-
-        {
-      label: " Notification",
-      key: "Notification",
+    {
+      label: "Notifications",
+      key: "notifications",
       icon: <FaHeart />,
-      action: () => router.push("/Notification"), // ✅ redirect to /coupon
+      action: () => router.push("/notifications"),
     },
-
     {
       label: "Logout",
       key: "logout",
       icon: <FaSignOutAlt />,
-      action: () => alert("Logged out!"),
+      action: () => {
+        localStorage.removeItem("token");
+        setUser(null);
+        router.push("/login");
+      },
     },
   ];
+
+  const handleEditClick = () => {
+    if (user) {
+      setFormData({
+        name: user.name || "",
+        email: user.email || "",
+        phone: user.phone || "",
+      });
+      setShowEditModal(true);
+    }
+  };
+
+  const handleSave = () => {
+    // Update context
+    setUser({
+      ...user!,
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+    });
+    setShowEditModal(false);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -229,7 +221,10 @@ export default function ProfileDashboard() {
                 <h2 className="text-lg font-semibold flex items-center gap-2">
                   <FaRegUser className="text-blue-600" /> Personal Info
                 </h2>
-                <button className="flex items-center gap-2 text-sm px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-semibold shadow">
+                <button
+                  onClick={handleEditClick}
+                  className="flex items-center gap-2 text-sm px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-semibold shadow"
+                >
                   <FiEdit /> Edit Info
                 </button>
               </div>
@@ -244,7 +239,10 @@ export default function ProfileDashboard() {
                   <strong>Phone:</strong> {user?.phone || "Not provided"}
                 </p>
                 <p>
-                  <strong>Address:</strong> {user?.phone || "Not provided"}
+                  <strong>Address:</strong>{" "}
+                  {addresses.length > 0
+                    ? `${addresses[0].line1}, ${addresses[0].city}`
+                    : "Not provided"}
                 </p>
               </div>
             </div>
@@ -273,50 +271,27 @@ export default function ProfileDashboard() {
                   </thead>
                   <tbody>
                     {orders.map((order) => (
-                      <tbody key={order.id}>
-                        <tr className="border-t">
-                          <td className="p-3">{order.id}</td>
-                          <td className="p-3">
-                            {new Date(order.createdAt).toLocaleDateString()}
-                          </td>
-                          <td className="p-3">
-                            <span
-                              className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                                order.status === "confirmed"
-                                  ? "bg-green-100 text-green-700"
-                                  : "bg-yellow-100 text-yellow-700"
-                              }`}
-                            >
-                              {order.status}
-                            </span>
-                          </td>
-                          <td className="p-3 text-right">
-                            {(order.amount / 100).toFixed(2)}{" "}
-                            {order.currency.toUpperCase()}
-                          </td>
-                        </tr>
-
-                        {/* Products inside order */}
-                        {order.products.map((product) => (
-                          <tr key={product.id} className="border-t bg-gray-50">
-                            <td
-                              colSpan={2}
-                              className="p-2 flex items-center gap-2"
-                            >
-                              <img
-                                src={product.imageUrl}
-                                alt={product.name}
-                                className="w-12 h-12 object-cover rounded"
-                              />
-                              {product.name}
-                            </td>
-                            <td className="p-2">{product.quantity}x</td>
-                            <td className="p-2 text-right">
-                              ${(product.price / 100).toFixed(2)}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
+                      <tr key={order.id} className="border-t">
+                        <td className="p-3">{order.id}</td>
+                        <td className="p-3">
+                          {new Date(order.createdAt).toLocaleDateString()}
+                        </td>
+                        <td className="p-3">
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                              order.status === "confirmed"
+                                ? "bg-green-100 text-green-700"
+                                : "bg-yellow-100 text-yellow-700"
+                            }`}
+                          >
+                            {order.status}
+                          </span>
+                        </td>
+                        <td className="p-3 text-right">
+                          {(order.amount / 100).toFixed(2)}{" "}
+                          {order.currency.toUpperCase()}
+                        </td>
+                      </tr>
                     ))}
                   </tbody>
                 </table>
@@ -391,6 +366,58 @@ export default function ProfileDashboard() {
               </ul>
             )}
           </section>
+        )}
+
+        {/* Edit Info Modal */}
+        {showEditModal && (
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+            <div className="bg-white rounded-xl p-6 w-96 shadow-lg">
+              <h2 className="text-lg font-bold mb-4">Edit Info</h2>
+              <div className="flex flex-col gap-3">
+                <input
+                  type="text"
+                  placeholder="Name"
+                  className="border p-2 rounded"
+                  value={formData.name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
+                />
+                <input
+                  type="email"
+                  placeholder="Email"
+                  className="border p-2 rounded"
+                  value={formData.email}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
+                />
+                <input
+                  type="text"
+                  placeholder="Phone"
+                  className="border p-2 rounded"
+                  value={formData.phone}
+                  onChange={(e) =>
+                    setFormData({ ...formData, phone: e.target.value })
+                  }
+                />
+              </div>
+              <div className="flex justify-end gap-3 mt-4">
+                <button
+                  onClick={() => setShowEditModal(false)}
+                  className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSave}
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </main>
     </div>

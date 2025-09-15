@@ -9,7 +9,7 @@ interface Product {
   _id: string;
   name: string;
   price: number;
-  salePrice?: number;
+  salePrice?: number | null;
   images: string[];
   slug: string;
   brand?: string;
@@ -33,7 +33,7 @@ export default function ProductCard({ product, view = "grid" }: Props) {
   const productForCart: CartProduct = {
     id: product._id,
     name: product.name,
-    price: product.salePrice || product.price,
+    price: product.salePrice ?? product.price,
     imageUrl: product.images?.[0] || "/placeholder.png",
     slug: product.slug,
     brand: product.brand || "Unknown",
@@ -52,16 +52,15 @@ export default function ProductCard({ product, view = "grid" }: Props) {
     }
   };
 
-  // Show animated toast
   const showAlert = (message: string) => {
     setToastMessage(message);
     setShowToast(true);
-    setTimeout(() => setShowToast(false), 1500); // Hide after 1.5s
+    setTimeout(() => setShowToast(false), 1500);
   };
 
   return (
     <>
-      {/* Animated Top Toast */}
+      {/* Top Toast */}
       <div
         className={`fixed top-4 left-1/2 transform -translate-x-1/2 z-50 transition-all duration-500 ease-in-out pointer-events-none`}
         style={{
@@ -80,7 +79,7 @@ export default function ProductCard({ product, view = "grid" }: Props) {
         className={`relative bg-white border rounded-2xl shadow-sm hover:shadow-xl transition transform hover:-translate-y-1 p-4
         ${view === "list" ? "flex gap-6 items-center" : ""}`}
       >
-        {/* Wishlist Heart */}
+        {/* Wishlist */}
         <button
           onClick={handleWishlist}
           className="absolute bottom-5 right-3 p-2 rounded-full bg-white shadow hover:scale-110 transition"
@@ -93,18 +92,16 @@ export default function ProductCard({ product, view = "grid" }: Props) {
         </button>
 
         {/* Badge */}
-       {(product.salePrice != null || product.badge) && (
-  <span
-    className={`absolute -top-2 -left-2 z-10 text-xs font-bold px-6 py-3 rounded-full shadow-md ${
-      product.salePrice != null || product.badge === "sale"
-        ? "bg-red-600 text-white"
-        : "bg-green-500 text-white"
-    }`}
-  >
-    {product.salePrice != null || product.badge === "sale" ? "ON SALE" : "NEW"}
-  </span>
-)}
-
+        {product.salePrice != null && product.salePrice < product.price && (
+          <span className="absolute -top-2 -left-2 z-10 text-xs font-bold px-6 py-3 rounded-full shadow-md bg-red-600 text-white">
+            ON SALE
+          </span>
+        )}
+        {(product.salePrice == null) && product.badge === "new" && (
+          <span className="absolute -top-2 -left-2 z-10 text-xs font-bold px-6 py-3 rounded-full shadow-md bg-green-500 text-white">
+            NEW
+          </span>
+        )}
 
         {/* Product Image */}
         <Link href={`/products/${product.slug}`} className="flex-shrink-0 relative">
@@ -139,7 +136,7 @@ export default function ProductCard({ product, view = "grid" }: Props) {
 
           {/* Pricing */}
           <div className="mt-2">
-            {product.salePrice ? (
+            {product.salePrice != null && product.salePrice < product.price ? (
               <>
                 <span className="text-gray-400 line-through mr-2 text-sm">
                   ${product.price}

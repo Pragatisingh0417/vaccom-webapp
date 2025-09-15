@@ -13,18 +13,11 @@ export async function GET(req: Request) {
     let filter: any = {};
 
     if (brand) {
-      // Decode, replace dashes with spaces, trim
       const normalizedBrand = decodeURIComponent(brand)
         .replace(/-/g, " ")
         .replace(/\s+/g, " ")
         .trim();
-
-      // Escape special regex chars (like &)
-      const escapedBrand = normalizedBrand.replace(
-        /[.*+?^${}()|[\]\\]/g,
-        "\\$&"
-      );
-
+      const escapedBrand = normalizedBrand.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       filter.brand = { $regex: new RegExp(`^${escapedBrand}$`, "i") };
     }
 
@@ -33,11 +26,7 @@ export async function GET(req: Request) {
         .replace(/-/g, " ")
         .replace(/\s+/g, " ")
         .trim();
-
-      const escapedCategory = normalizedCategory.replace(
-        /[.*+?^${}()|[\]\\]/g,
-        "\\$&"
-      );
+      const escapedCategory = normalizedCategory.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       filter.category = { $regex: new RegExp(`^${escapedCategory}$`, "i") };
     }
 
@@ -46,7 +35,14 @@ export async function GET(req: Request) {
     }
 
     const products = await Product.find(filter).lean();
-    return NextResponse.json(products);
+
+    // ✅ Minimal fix: ensure salePrice is number or null
+    const fixedProducts = products.map((p) => ({
+      ...p,
+      salePrice: p.salePrice !== undefined ? Number(p.salePrice) : null,
+    }));
+
+    return NextResponse.json(fixedProducts);
   } catch (err: any) {
     console.error(err);
     return NextResponse.json({ error: err.message }, { status: 500 });

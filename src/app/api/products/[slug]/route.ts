@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse } from "next/server"; 
 import { connectToDatabase } from "@/app/lib/mongodb";
 import Product from "@/models/Product";
 
@@ -15,7 +15,6 @@ export async function GET(
 
     await connectToDatabase();
 
-    // Use lean() for better performance since we don’t need mongoose doc methods
     const product = await Product.findOne({ slug }).lean();
 
     if (!product) {
@@ -43,14 +42,13 @@ export async function PUT(
     const body = await req.json();
     await connectToDatabase();
 
-    // Ensure active flag defaults to true
     if (body.isActive === undefined) {
       body.isActive = true;
     }
 
     const updatedProduct = await Product.findOneAndUpdate(
       { slug },
-      { $set: body }, // ✅ safer update (avoids replacing whole object accidentally)
+      { $set: body },
       { new: true, lean: true }
     );
 
@@ -61,6 +59,35 @@ export async function PUT(
     return NextResponse.json(updatedProduct, { status: 200 });
   } catch (err: any) {
     console.error("❌ Error updating product:", err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}
+
+// ✅ Delete product by slug
+export async function DELETE(
+  req: Request,
+  context: { params: { slug: string } }
+) {
+  try {
+    const { slug } = context.params;
+    if (!slug) {
+      return NextResponse.json({ error: "Slug required" }, { status: 400 });
+    }
+
+    await connectToDatabase();
+
+    const deletedProduct = await Product.findOneAndDelete({ slug });
+
+    if (!deletedProduct) {
+      return NextResponse.json({ error: "Product not found" }, { status: 404 });
+    }
+
+    return NextResponse.json(
+      { message: "Product deleted successfully", slug },
+      { status: 200 }
+    );
+  } catch (err: any) {
+    console.error("❌ Error deleting product:", err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

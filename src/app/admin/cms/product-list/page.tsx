@@ -20,6 +20,7 @@ export default function ProductListPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingSlug, setSavingSlug] = useState<string | null>(null);
+  const [deletingSlug, setDeletingSlug] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
@@ -59,7 +60,6 @@ export default function ProductListPage() {
       if (!res.ok) throw new Error("Failed to update product");
       const updated = await res.json();
 
-      // Sync state with DB
       setProducts((prev) =>
         prev.map((p) =>
           p.slug === updated.slug ? { ...p, isActive: updated.isActive } : p
@@ -68,7 +68,6 @@ export default function ProductListPage() {
     } catch (err) {
       console.error(err);
       setError("Error updating product status.");
-
       // Rollback
       setProducts((prev) =>
         prev.map((p) =>
@@ -77,6 +76,28 @@ export default function ProductListPage() {
       );
     } finally {
       setSavingSlug(null);
+    }
+  };
+
+  // Delete product
+  const handleDelete = async (product: Product) => {
+    if (!confirm(`Are you sure you want to delete "${product.name}"?`)) return;
+
+    setDeletingSlug(product.slug);
+
+    try {
+      const res = await fetch(`/api/products/${product.slug}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) throw new Error("Failed to delete product");
+
+      setProducts((prev) => prev.filter((p) => p.slug !== product.slug));
+    } catch (err) {
+      console.error(err);
+      setError("Error deleting product.");
+    } finally {
+      setDeletingSlug(null);
     }
   };
 
@@ -100,7 +121,7 @@ export default function ProductListPage() {
   return (
     <div className="max-w-6xl mx-auto p-6">
       <h1 className="text-2xl font-bold mb-4">Product List</h1>
-       <button
+      <button
         className="bg-green-500 hover:bg-green-600 text-white mb-5 px-4 py-2 rounded"
         onClick={() => router.push("/admin/cms/add-product")}
       >
@@ -177,8 +198,7 @@ export default function ProductListPage() {
                 <td className="border px-4 py-2 flex gap-3 items-center">
                   <button
                     className="bg-blue-500 text-white px-2 py-1 rounded"
-                        onClick={() => router.push(`/products/${p.slug}`)}
-
+                    onClick={() => router.push(`/products/${p.slug}`)}
                   >
                     View
                   </button>
@@ -190,6 +210,14 @@ export default function ProductListPage() {
                     disabled={p.stock === 0}
                   >
                     Edit
+                  </button>
+
+                  <button
+                    className="bg-red-500 text-white px-2 py-1 rounded disabled:opacity-50"
+                    onClick={() => handleDelete(p)}
+                    disabled={deletingSlug === p.slug}
+                  >
+                    {deletingSlug === p.slug ? "Deleting..." : "Delete"}
                   </button>
 
                   {/* Accessible Toggle */}
