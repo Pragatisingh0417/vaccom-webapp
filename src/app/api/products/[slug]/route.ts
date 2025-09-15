@@ -2,25 +2,21 @@ import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/app/lib/mongodb";
 import Product from "@/models/Product";
 
-// ✅ GET product by slug (case-insensitive)
+// ✅ GET product by slug
 export async function GET(
   req: Request,
   context: { params: { slug: string } }
 ) {
   try {
-    let { slug } = context.params;
-
+    const { slug } = context.params;
     if (!slug) {
       return NextResponse.json({ error: "Slug required" }, { status: 400 });
     }
 
-    // Normalize slug to lowercase for case-insensitive search
-    slug = slug.toLowerCase();
-
     await connectToDatabase();
 
-    // Use lean() for better performance
-    const product = await Product.findOne({ slug }).collation({ locale: "en", strength: 2 }).lean();
+    // Use lean() for better performance since we don’t need mongoose doc methods
+    const product = await Product.findOne({ slug }).lean();
 
     if (!product) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
@@ -33,19 +29,16 @@ export async function GET(
   }
 }
 
-// ✅ Update product by slug (case-insensitive)
+// ✅ Update product by slug
 export async function PUT(
   req: Request,
   context: { params: { slug: string } }
 ) {
   try {
-    let { slug } = context.params;
-
+    const { slug } = context.params;
     if (!slug) {
       return NextResponse.json({ error: "Slug required" }, { status: 400 });
     }
-
-    slug = slug.toLowerCase(); // normalize
 
     const body = await req.json();
     await connectToDatabase();
@@ -57,8 +50,8 @@ export async function PUT(
 
     const updatedProduct = await Product.findOneAndUpdate(
       { slug },
-      { $set: body },
-      { new: true, lean: true, collation: { locale: "en", strength: 2 } }
+      { $set: body }, // ✅ safer update (avoids replacing whole object accidentally)
+      { new: true, lean: true }
     );
 
     if (!updatedProduct) {

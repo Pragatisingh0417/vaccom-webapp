@@ -8,15 +8,6 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
-// Display-friendly brand name
-function normalizeSlug(slug: string) {
-  return decodeURIComponent(slug)
-    .replace(/-/g, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-    .replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
 export default function BrandPage({ params }: Props) {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -27,23 +18,31 @@ export default function BrandPage({ params }: Props) {
   useEffect(() => {
     async function fetchProducts() {
       const { slug: rawSlug } = await params;
+      if (!rawSlug) return;
 
-      // ✅ Use lowercase slug for API
-      const apiSlug = rawSlug.toLowerCase();
-
-      // ✅ Display-friendly brand name
-      setBrandName(normalizeSlug(apiSlug));
-
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "";
-      const apiUrl = `${baseUrl}/api/products?brand=${encodeURIComponent(apiSlug)}`;
+      const normalizedSlug = decodeURIComponent(rawSlug).replace(/-/g, " ").trim();
 
       try {
-        const res = await fetch(apiUrl, { cache: "no-store" });
+        // Fetch all products from API and filter on frontend to match brand ignoring case & hyphen/space
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "";
+        const res = await fetch(`${baseUrl}/api/products`, { cache: "no-store" });
         const data = await res.json();
-        setProducts(Array.isArray(data) ? data : data.products || []);
+        const allProducts = Array.isArray(data) ? data : data.products || [];
+
+        // Filter products where brand matches normalizedSlug ignoring case and hyphen/space
+        const prods = allProducts.filter((p: any) =>
+          p.brand.replace(/[-\s]/g, "").toLowerCase() === normalizedSlug.replace(/\s/g, "").toLowerCase()
+        );
+
+        setProducts(prods);
+
+        // Display brand as in DB (first product) or fallback
+        if (prods.length > 0) setBrandName(prods[0].brand);
+        else setBrandName(normalizedSlug);
       } catch (e) {
         console.error("❌ Failed to fetch products:", e);
         setProducts([]);
+        setBrandName(normalizedSlug);
       } finally {
         setLoading(false);
       }
@@ -59,12 +58,8 @@ export default function BrandPage({ params }: Props) {
       {/* Banner */}
       <div className="bg-[url('https://vaccom.com.au/wp-content/uploads/2025/06/VACCUM-GP-2.jpg')] bg-cover bg-center h-64 md:h-72 flex items-center">
         <div className="flex flex-col justify-center ml-6 md:ml-12">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">
-            {brandName || "Brand"}
-          </h1>
-          <span className="text-white text-xl md:text-2xl">
-            Brand: {brandName}
-          </span>
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">{brandName || "Brand"}</h1>
+          <span className="text-white text-xl md:text-2xl">Brand: {brandName}</span>
         </div>
       </div>
 
@@ -80,13 +75,7 @@ export default function BrandPage({ params }: Props) {
 
         {/* Products */}
         {products.length > 0 ? (
-          <div
-            className={`grid gap-6 ${
-              view === "grid"
-                ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3"
-                : "grid-cols-1"
-            }`}
-          >
+          <div className={`grid gap-6 ${view === "grid" ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3" : "grid-cols-1"}`}>
             {products.map((product: any) => (
               <ProductCard key={product._id} product={product} view={view} />
             ))}

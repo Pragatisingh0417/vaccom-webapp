@@ -5,22 +5,31 @@ import Product from "@/models/Product";
 // GET /api/products/category/[slug]
 export async function GET(
   req: Request,
-  context: { params: Promise<{ slug: string }> } // ✅ params must be a Promise
+  context: { params: Promise<{ slug: string }> }
 ) {
   try {
-    const { slug } = await context.params; // ✅ await params
+    const { slug: rawSlug } = await context.params;
+    if (!rawSlug) {
+      return NextResponse.json({ error: "Slug required" }, { status: 400 });
+    }
+
     await connectToDatabase();
 
-    const decodedSlug = decodeURIComponent(slug);
+    // Decode, convert %26 to &, replace dashes with spaces, trim
+    const decodedSlug = decodeURIComponent(rawSlug)
+      .replace(/-/g, " ")
+      .replace(/%26/g, "&")
+      .replace(/\s+/g, " ")
+      .trim();
+    console.log("🔎 Category filter (slug):", decodedSlug);
 
     let filter: any = {};
 
-    // ✅ If slug is "today-deals", show only products marked as isTodayDeal
-    if (decodedSlug.toLowerCase() === "today-deals") {
+    // Today deals special case
+    if (decodedSlug.toLowerCase() === "today deals") {
       filter.isTodayDeal = true;
     } else {
-      // Otherwise, filter by category (case-insensitive)
-      filter.category = { $regex: new RegExp(`^${decodedSlug}$`, "i") };
+      filter.category = { $regex: new RegExp(decodedSlug, "i") }; // loose case-insensitive match
     }
 
     const products = await Product.find(filter).lean();

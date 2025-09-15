@@ -13,19 +13,32 @@ export async function GET(req: Request) {
     let filter: any = {};
 
     if (brand) {
-      // ✅ Normalize slug: replace dashes with spaces, trim, case-insensitive
+      // Decode, replace dashes with spaces, trim
       const normalizedBrand = decodeURIComponent(brand)
         .replace(/-/g, " ")
         .replace(/\s+/g, " ")
         .trim();
-      filter.brand = { $regex: new RegExp(`^${normalizedBrand}$`, "i") };
+
+      // Escape special regex chars (like &)
+      const escapedBrand = normalizedBrand.replace(
+        /[.*+?^${}()|[\]\\]/g,
+        "\\$&"
+      );
+
+      filter.brand = { $regex: new RegExp(`^${escapedBrand}$`, "i") };
     }
 
     if (category) {
       const normalizedCategory = decodeURIComponent(category)
         .replace(/-/g, " ")
+        .replace(/\s+/g, " ")
         .trim();
-      filter.category = { $regex: new RegExp(`^${normalizedCategory}$`, "i") };
+
+      const escapedCategory = normalizedCategory.replace(
+        /[.*+?^${}()|[\]\\]/g,
+        "\\$&"
+      );
+      filter.category = { $regex: new RegExp(`^${escapedCategory}$`, "i") };
     }
 
     if (isTodayDeal === "true") {

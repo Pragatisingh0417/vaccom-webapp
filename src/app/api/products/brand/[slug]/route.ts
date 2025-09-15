@@ -2,10 +2,10 @@ import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/app/lib/mongodb";
 import Product from "@/models/Product";
 
-// ✅ GET /api/products/brand/[slug]
+// GET /api/products/brand/[slug]
 export async function GET(
   req: Request,
-  context: { params: Promise<{ slug: string }> } // params must be a Promise
+  context: { params: Promise<{ slug: string }> }
 ) {
   try {
     const { slug: rawSlug } = await context.params;
@@ -16,20 +16,18 @@ export async function GET(
 
     await connectToDatabase();
 
-    // Normalize slug for display/logs
-    const slug = rawSlug.toLowerCase();
-
-    // Convert slug to real brand name for MongoDB query
-    const decoded = slug.replace(/-/g, " ");
-    const normalizedBrand = decoded
-      .replace(/\b\w/g, (c) => c.toUpperCase())
+    // Decode, replace dashes with spaces, handle special chars like & and trim
+    const decodedSlug = decodeURIComponent(rawSlug)
+      .replace(/-/g, " ")
+      .replace(/%26/g, "&")
+      .replace(/\s+/g, " ")
       .trim();
 
-    console.log("🔎 Brand filter (slug):", slug); // logs i-vac
+    console.log("🔎 Brand filter (slug):", decodedSlug);
 
-    // Find products by brand (case-insensitive)
+    // Case-insensitive, loose regex (no ^ or $ anchors)
     const products = await Product.find({
-      brand: { $regex: new RegExp(`^${normalizedBrand}$`, "i") },
+      brand: { $regex: new RegExp(decodedSlug, "i") },
     }).lean();
 
     if (!products || products.length === 0) {
