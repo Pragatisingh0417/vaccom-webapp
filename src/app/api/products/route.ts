@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse } from "next/server"; 
 import Product from "@/models/Product";
 import { connectToDatabase } from "@/app/lib/mongodb";
 
@@ -36,10 +36,11 @@ export async function GET(req: Request) {
 
     const products = await Product.find(filter).lean();
 
-    // ✅ Minimal fix: ensure salePrice is number or null
+    // ✅ Ensure both price & salePrice are always numbers
     const fixedProducts = products.map((p) => ({
       ...p,
-      salePrice: p.salePrice !== undefined ? Number(p.salePrice) : null,
+      price: p.price ? Number(p.price) : 0,
+      salePrice: p.salePrice ? Number(p.salePrice) : 0,
     }));
 
     return NextResponse.json(fixedProducts);

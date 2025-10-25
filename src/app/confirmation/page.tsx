@@ -1,9 +1,18 @@
 'use client';
+export const dynamic = 'force-dynamic';
 
-import { useEffect, useState } from "react";
+import { useEffect, useState , Suspense} from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 
 export default function ConfirmationPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ConfirmationNewPage />
+    </Suspense>
+  );
+}
+
+function ConfirmationNewPage()  {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -13,7 +22,7 @@ export default function ConfirmationPage() {
   const [emailSent, setEmailSent] = useState(false);
 
   useEffect(() => {
-    async function confirmOrder() {
+    const confirmOrder = async () => {
       const transactionId = searchParams.get("transactionId");
       const token = localStorage.getItem("token");
       const userEmail = localStorage.getItem("userEmail");
@@ -25,7 +34,6 @@ export default function ConfirmationPage() {
       }
 
       try {
-        // Call backend confirmation API (single endpoint to handle everything)
         const res = await fetch(`/api/orders/confirm`, {
           method: "POST",
           headers: {
@@ -39,19 +47,17 @@ export default function ConfirmationPage() {
 
         if (!res.ok) {
           setError(data.error || "Order confirmation failed.");
-          setLoading(false);
-          return;
+        } else {
+          setOrderId(data.orderId);
+          setEmailSent(data.emailSent);
         }
-
-        setOrderId(data.orderId);
-        setEmailSent(data.emailSent);
-      } catch (err: any) {
+      } catch (err) {
         console.error("Error confirming order:", err);
         setError("Unexpected error occurred.");
       } finally {
         setLoading(false);
       }
-    }
+    };
 
     confirmOrder();
   }, [searchParams]);

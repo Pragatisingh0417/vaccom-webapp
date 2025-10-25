@@ -5,10 +5,10 @@ interface ProductForm {
   name: string;
   price: string;         
   salePrice?: string;    
-  shortDesc: string;
-  longDesc: string;
+  shortDesc?: string;    
+  longDesc?: string;     
   brand: string;
-  category: string;
+  category?: string;     
   images: File[];
   isTodayDeal?: boolean; 
   stock: string;         
@@ -44,70 +44,70 @@ export default function AddProductPage() {
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
-    const { name, value, files, type, checked } = e.target as HTMLInputElement;
-    if (name === "images" && files) {
-        setProduct({ ...product, images: [...product.images, ...Array.from(files)] });
+    const target = e.target;
 
-      // setProduct({ ...product, images: Array.from(files) });
-    } else if (name === "isTodayDeal" && type === "checkbox") {
-      setProduct({ ...product, isTodayDeal: checked });
+    if (target instanceof HTMLInputElement) {
+      const { name, type, checked, files, value } = target;
+
+      if (type === "checkbox") {
+        setProduct(prev => ({ ...prev, isTodayDeal: checked }));
+      } else if (type === "file" && files) {
+        setProduct(prev => ({ ...prev, images: [...prev.images, ...Array.from(files)] }));
+      } else {
+        setProduct(prev => ({ ...prev, [name]: value }));
+      }
     } else {
-      setProduct({ ...product, [name]: value });
+      // textarea or select
+      const { name, value } = target as HTMLTextAreaElement | HTMLSelectElement;
+      setProduct(prev => ({ ...prev, [name]: value }));
     }
   };
 
- const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-  e.preventDefault();
-  try {
-    const formData = new FormData();
-    formData.append("name", product.name);
-    formData.append("price", String(Number(product.price)));
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    try {
+      const formData = new FormData();
+      formData.append("name", product.name);
+      formData.append("price", String(Number(product.price)));
 
-    // ✅ Always send salePrice as number, or skip if empty
-    if (product.salePrice && product.salePrice.trim() !== "") {
-      formData.append("salePrice", String(Number(product.salePrice)));
-    }
+      if (product.salePrice?.trim()) formData.append("salePrice", String(Number(product.salePrice)));
+      if (product.shortDesc?.trim()) formData.append("shortDesc", product.shortDesc);
+      if (product.longDesc?.trim()) formData.append("longDesc", product.longDesc);
+      formData.append("brand", product.brand);
+      if (product.category?.trim()) formData.append("category", product.category);
+      formData.append("isTodayDeal", product.isTodayDeal ? "true" : "false");
+      formData.append("stock", String(Number(product.stock)));
 
-    formData.append("shortDesc", product.shortDesc);
-    formData.append("longDesc", product.longDesc);
-    formData.append("brand", product.brand);
-    formData.append("category", product.category);
-    formData.append("isTodayDeal", product.isTodayDeal ? "true" : "false");
+      product.images.forEach((img) => formData.append("images", img));
 
-    // ✅ Stock as number
-    formData.append("stock", String(Number(product.stock)));
-
-    product.images.forEach((img) => formData.append("images", img));
-
-    const res = await fetch("/api/admin/products", {
-      method: "POST",
-      body: formData,
-    });
-
-    if (res.ok) {
-      alert("Product added successfully!");
-      setProduct({
-        name: "",
-        price: "",
-        salePrice: "",
-        shortDesc: "",
-        longDesc: "",
-        brand: "",
-        category: "",
-        images: [],
-        isTodayDeal: false,
-        stock: "",
+      const res = await fetch("/api/admin/products", {
+        method: "POST",
+        body: formData,
       });
-    } else {
-      const data = await res.json();
-      alert("Failed: " + data.error);
-    }
-  } catch (err) {
-    console.error(err);
-    alert("Something went wrong");
-  }
-};
 
+      if (res.ok) {
+        alert("Product added successfully!");
+        setProduct({
+          name: "",
+          price: "",
+          salePrice: "",
+          shortDesc: "",
+          longDesc: "",
+          brand: "",
+          category: "",
+          images: [],
+          isTodayDeal: false,
+          stock: "",
+        });
+      } else {
+        const data = await res.json();
+        alert("Failed: " + data.error);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Something went wrong");
+    }
+  };
 
   return (
     <div className="max-w-2xl mx-auto p-6 bg-white shadow rounded">
@@ -153,19 +153,17 @@ export default function AddProductPage() {
 
         <input
           name="shortDesc"
-          value={product.shortDesc}
+          value={product.shortDesc || ""}
           onChange={handleChange}
-          placeholder="Short Description"
-          required
+          placeholder="Short Description (optional)"
           className="w-full border p-2 rounded"
         />
 
         <textarea
           name="longDesc"
-          value={product.longDesc}
+          value={product.longDesc || ""}
           onChange={handleChange}
-          placeholder="Long Description"
-          required
+          placeholder="Long Description (optional)"
           className="w-full border p-2 rounded"
         />
 
@@ -177,22 +175,17 @@ export default function AddProductPage() {
           className="w-full border p-2 rounded"
         >
           <option value="">Select Brand</option>
-          {brands.map((b) => (
-            <option key={b} value={b}>{b}</option>
-          ))}
+          {brands.map((b) => <option key={b} value={b}>{b}</option>)}
         </select>
 
         <select
           name="category"
-          value={product.category}
+          value={product.category || ""}
           onChange={handleChange}
-          required
           className="w-full border p-2 rounded"
         >
-          <option value="">Select Category</option>
-          {categories.map((c) => (
-            <option key={c} value={c}>{c}</option>
-          ))}
+          <option value="">Select Category (optional)</option>
+          {categories.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
 
         <label className="flex items-center gap-2">
@@ -213,9 +206,8 @@ export default function AddProductPage() {
           className="w-full"
         />
 
-        {/* Preview selected images */}
         {product.images.length > 0 && (
-          <div className="flex gap-2 mt-2">
+          <div className="flex gap-2 mt-2 flex-wrap">
             {product.images.map((img, i) => (
               <img
                 key={i}

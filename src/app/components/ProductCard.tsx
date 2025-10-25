@@ -30,10 +30,19 @@ export default function ProductCard({ product, view = "grid" }: Props) {
     product.images?.[0] || "/placeholder.png"
   );
 
+  // ✅ Normalize salePrice
+  const normalizedSalePrice =
+    product.salePrice !== undefined && product.salePrice !== null
+      ? Number(product.salePrice)
+      : 0;
+
+  // ✅ Determine if product is on sale
+  const hasSale = normalizedSalePrice > 0 && normalizedSalePrice < product.price;
+
   const productForCart: CartProduct = {
     id: product._id,
     name: product.name,
-    price: product.salePrice ?? product.price,
+    price: hasSale ? normalizedSalePrice : product.price,
     imageUrl: product.images?.[0] || "/placeholder.png",
     slug: product.slug,
     brand: product.brand || "Unknown",
@@ -60,7 +69,7 @@ export default function ProductCard({ product, view = "grid" }: Props) {
 
   return (
     <>
-      {/* Top Toast */}
+      {/* Toast */}
       <div
         className={`fixed top-4 left-1/2 transform -translate-x-1/2 z-50 transition-all duration-500 ease-in-out pointer-events-none`}
         style={{
@@ -85,23 +94,23 @@ export default function ProductCard({ product, view = "grid" }: Props) {
           className="absolute bottom-5 right-3 p-2 rounded-full bg-white shadow hover:scale-110 transition"
         >
           <FiHeart
-            className={`w-6 h-6 ${
-              inWishlist ? "fill-red-500 text-red-500" : "text-gray-500"
-            }`}
+            className={`w-6 h-6 ${inWishlist ? "fill-red-500 text-red-500" : "text-gray-500"}`}
           />
         </button>
 
-        {/* Badge */}
-        {product.salePrice != null && product.salePrice < product.price && (
-          <span className="absolute -top-2 -left-2 z-10 text-xs font-bold px-6 py-3 rounded-full shadow-md bg-red-600 text-white">
-            ON SALE
-          </span>
-        )}
-        {(product.salePrice == null) && product.badge === "new" && (
-          <span className="absolute -top-2 -left-2 z-10 text-xs font-bold px-6 py-3 rounded-full shadow-md bg-green-500 text-white">
-            NEW
-          </span>
-        )}
+        {/* Badges */}
+        <div className="absolute -top-2 -left-2 z-10 flex flex-col gap-2">
+          {hasSale && (
+            <span className="text-xs font-bold px-6 py-3 rounded-full shadow-md bg-red-600 text-white">
+              ON SALE
+            </span>
+          )}
+          {product.badge === "new" && (
+            <span className="text-xs font-bold px-6 py-3 rounded-full shadow-md bg-green-500 text-white">
+              NEW
+            </span>
+          )}
+        </div>
 
         {/* Product Image */}
         <Link href={`/products/${product.slug}`} className="flex-shrink-0 relative">
@@ -111,12 +120,8 @@ export default function ProductCard({ product, view = "grid" }: Props) {
             className={`rounded-xl object-cover transition-all duration-500 ${
               view === "list" ? "w-40 h-40" : "w-full h-52 md:h-56 mx-auto mb-3"
             }`}
-            onMouseEnter={() => {
-              if (product.images?.[1]) setCurrentImage(product.images[1]);
-            }}
-            onMouseLeave={() =>
-              setCurrentImage(product.images?.[0] || "/placeholder.png")
-            }
+            onMouseEnter={() => product.images?.[1] && setCurrentImage(product.images[1])}
+            onMouseLeave={() => setCurrentImage(product.images?.[0] || "/placeholder.png")}
           />
         </Link>
 
@@ -136,14 +141,10 @@ export default function ProductCard({ product, view = "grid" }: Props) {
 
           {/* Pricing */}
           <div className="mt-2">
-            {product.salePrice != null && product.salePrice < product.price ? (
+            {hasSale ? (
               <>
-                <span className="text-gray-400 line-through mr-2 text-sm">
-                  ${product.price}
-                </span>
-                <span className="text-red-600 font-bold text-lg">
-                  ${product.salePrice}
-                </span>
+                <span className="text-gray-400 line-through mr-2 text-sm">${product.price}</span>
+                <span className="text-red-600 font-bold text-lg">${normalizedSalePrice}</span>
               </>
             ) : (
               <span className="text-red-600 font-bold text-lg">${product.price}</span>

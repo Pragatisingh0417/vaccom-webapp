@@ -20,6 +20,7 @@ export async function GET() {
 
 // POST: add new product
 // POST: add new product
+// POST: add new product
 export async function POST(req: Request) {
   try {
     await connectToDatabase();
@@ -28,6 +29,9 @@ export async function POST(req: Request) {
 
     const name = formData.get("name") as string;
     const price = Number(formData.get("price"));
+    const salePrice = formData.get("salePrice")
+      ? Number(formData.get("salePrice"))
+      : null;   // ✅ handle optional salePrice
     const shortDesc = formData.get("shortDesc") as string;
     const longDesc = formData.get("longDesc") as string;
     const brand = formData.get("brand") as string;
@@ -35,7 +39,7 @@ export async function POST(req: Request) {
     const stock = Number(formData.get("stock") || 0);
     const isTodayDeal = formData.get("isTodayDeal") === "true";
 
-    // ✅ Save files to public/uploads
+    // ✅ Save images
     const files = formData.getAll("images") as File[];
     const imagePaths: string[] = [];
     const fs = require("fs");
@@ -57,11 +61,12 @@ export async function POST(req: Request) {
       name,
       slug,
       price,
+      salePrice,   // ✅ include in DB
       shortDesc,
       longDesc,
       brand,
       category,
-      images: imagePaths, // ✅ store URLs instead of base64
+      images: imagePaths,
       stock,
       isOutOfStock: stock <= 0,
       isTodayDeal,
@@ -73,6 +78,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Failed to add product" }, { status: 500 });
   }
 }
+
 
 
 

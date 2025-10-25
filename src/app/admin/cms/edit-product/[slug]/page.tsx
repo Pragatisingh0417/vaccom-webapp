@@ -8,11 +8,11 @@ interface Product {
   name: string;
   price: number;
   salePrice?: number;
-  shortDesc: string;
-  longDesc: string;
+  shortDesc?: string;
+  longDesc?: string;
   brand: string;
-  category: string;
-  images: string[]; // URLs for existing images
+  category?: string;
+  images: string[];
   isTodayDeal?: boolean;
   stock: number;
   isOutOfStock: boolean;
@@ -30,7 +30,7 @@ export default function EditProductPage() {
     slug: "",
     name: "",
     price: 0,
-    salePrice: 0,
+    salePrice: undefined,
     shortDesc: "",
     longDesc: "",
     brand: "",
@@ -44,13 +44,14 @@ export default function EditProductPage() {
   const [loading, setLoading] = useState(true);
   const [newImages, setNewImages] = useState<File[]>([]);
 
+  // Fetch product
   useEffect(() => {
     if (!slug) return;
     const fetchProduct = async () => {
       try {
         const res = await fetch(`/api/products/${slug}`);
         const data = await res.json();
-        setProduct(data);
+        setProduct(prev => ({ ...prev, ...data }));
       } catch (err) {
         console.error(err);
       } finally {
@@ -60,27 +61,38 @@ export default function EditProductPage() {
     fetchProduct();
   }, [slug]);
 
+  // Type-safe handleChange
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value, type, checked, files } = e.target as HTMLInputElement;
-    if (name === "isTodayDeal" && type === "checkbox") {
-      setProduct({ ...product, isTodayDeal: checked });
-    } else if (name === "stock") {
-      const stockValue = Number(value);
-      setProduct({ ...product, stock: stockValue, isOutOfStock: stockValue <= 0 });
-    } else if (name === "images" && files) {
-      // Append newly selected files
-      setNewImages([...newImages, ...Array.from(files)]);
+    const target = e.target;
+
+    if (target instanceof HTMLInputElement) {
+      const { name, type, checked, files, value } = target;
+
+      if (type === "checkbox") {
+        setProduct(prev => ({ ...prev, isTodayDeal: checked }));
+      } else if (type === "file" && files) {
+        setNewImages(prev => [...prev, ...Array.from(files)]);
+      } else if (name === "stock") {
+        const stockValue = Number(value);
+        setProduct(prev => ({ ...prev, stock: stockValue, isOutOfStock: stockValue <= 0 }));
+      } else if (name === "salePrice") {
+        setProduct(prev => ({ ...prev, salePrice: value ? Number(value) : undefined }));
+      } else {
+        setProduct(prev => ({ ...prev, [name]: value }));
+      }
     } else {
-      setProduct({ ...product, [name]: value });
+      // textarea or select
+      const { name, value } = target as HTMLTextAreaElement | HTMLSelectElement;
+      setProduct(prev => ({ ...prev, [name]: value }));
     }
   };
 
   const handleRemoveExistingImage = (imgUrl: string) => {
-    setProduct({ ...product, images: product.images.filter(i => i !== imgUrl) });
+    setProduct(prev => ({ ...prev, images: prev.images.filter(i => i !== imgUrl) }));
   };
 
   const handleRemoveNewImage = (index: number) => {
-    setNewImages(newImages.filter((_, i) => i !== index));
+    setNewImages(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleUploadLocalImages = async () => {
@@ -96,7 +108,7 @@ export default function EditProductPage() {
       });
       if (res.ok) {
         const data = await res.json();
-        setProduct({ ...product, images: [...product.images, ...data.urls] });
+        setProduct(prev => ({ ...prev, images: [...prev.images, ...data.urls] }));
         setNewImages([]);
       } else {
         const data = await res.json();
@@ -147,18 +159,17 @@ export default function EditProductPage() {
     <div className="max-w-3xl mx-auto p-6">
       <h1 className="text-2xl font-bold mb-4">Edit Product</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Basic Inputs */}
         <input name="name" value={product.name} onChange={handleChange} placeholder="Name" className="w-full border px-3 py-2"/>
         <input name="price" type="number" value={product.price} onChange={handleChange} placeholder="Price" className="w-full border px-3 py-2"/>
-        <input name="salePrice" type="number" value={product.salePrice || 0} onChange={handleChange} placeholder="Sale Price" className="w-full border px-3 py-2"/>
+        <input name="salePrice" type="number" value={product.salePrice ?? ""} onChange={handleChange} placeholder="Sale Price" className="w-full border px-3 py-2"/>
         <input name="stock" type="number" value={product.stock} onChange={handleChange} placeholder="Number of Stocks" className="w-full border px-3 py-2"/>
-        <input name="shortDesc" value={product.shortDesc} onChange={handleChange} placeholder="Short Description" className="w-full border px-3 py-2"/>
-        <textarea name="longDesc" value={product.longDesc} onChange={handleChange} placeholder="Long Description" className="w-full border px-3 py-2"/>
+        <input name="shortDesc" value={product.shortDesc ?? ""} onChange={handleChange} placeholder="Short Description" className="w-full border px-3 py-2"/>
+        <textarea name="longDesc" value={product.longDesc ?? ""} onChange={handleChange} placeholder="Long Description" className="w-full border px-3 py-2"/>
         <select name="brand" value={product.brand} onChange={handleChange} className="w-full border px-3 py-2">
           <option value="">Select Brand</option>
           {brands.map(b => <option key={b} value={b}>{b}</option>)}
         </select>
-        <select name="category" value={product.category} onChange={handleChange} className="w-full border px-3 py-2">
+        <select name="category" value={product.category ?? ""} onChange={handleChange} className="w-full border px-3 py-2">
           <option value="">Select Category</option>
           {categories.map(c => <option key={c} value={c}>{c}</option>)}
         </select>

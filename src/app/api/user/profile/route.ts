@@ -1,8 +1,7 @@
-// src/app/api/user/profile/route.ts
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/app/lib/mongodb";
 import User from "@/models/User";
-import { getServerSession } from "next-auth"; // if using next-auth
+import { getServerSession } from "next-auth";
 
 export async function GET() {
   try {
@@ -13,7 +12,13 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const user = await User.findOne({ email: session.user.email }).lean();
+    const user = await User.findOne({ email: session.user.email }).lean<{
+      _id: string;
+      name: string;
+      email: string;
+      phone: string;
+      avatarUrl?: string;
+    }>();
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });

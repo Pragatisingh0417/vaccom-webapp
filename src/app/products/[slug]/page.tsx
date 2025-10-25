@@ -15,11 +15,12 @@ interface Product {
   shortDesc?: string;
   longDesc?: string;
   price: number;
-  salePrice?: number; // ✅ added for sale support
+  salePrice?: number;
   images: string[];
   features?: string[];
   rating?: number;
   sold?: number;
+  badge?: "new" | "sale";
 }
 
 export default function ProductDetail() {
@@ -28,7 +29,6 @@ export default function ProductDetail() {
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [inWishlist, setInWishlist] = useState(false);
-  const [showReviews, setShowReviews] = useState(false);
   const [notify, setNotify] = useState("");
   const [notifyColor, setNotifyColor] = useState("green");
   const [mainImage, setMainImage] = useState<string>("");
@@ -46,11 +46,7 @@ export default function ProductDetail() {
         if (!res.ok) throw new Error("Failed to fetch product");
         const data = await res.json();
         setProduct(data);
-        setMainImage(
-          data.images && data.images.length > 0
-            ? data.images[0]
-            : "/placeholder.png"
-        );
+        setMainImage(data.images?.[0] || "/placeholder.png");
       } catch (err) {
         console.error(err);
       } finally {
@@ -60,7 +56,7 @@ export default function ProductDetail() {
     fetchProduct();
   }, [slug]);
 
-  // Sync heart with wishlist
+  // Sync wishlist
   useEffect(() => {
     if (!product) return;
     const exists = wishlist.some((item) => item.id === product._id);
@@ -70,10 +66,17 @@ export default function ProductDetail() {
   if (loading) return <p className="text-center mt-10">Loading...</p>;
   if (!product) return <p className="text-center mt-10">Product not found</p>;
 
+  // Normalize sale price
+  const normalizedSalePrice =
+    product.salePrice !== undefined && product.salePrice !== null
+      ? Number(product.salePrice)
+      : 0;
+  const hasSale = normalizedSalePrice > 0 && normalizedSalePrice < product.price;
+
   const productForCart: CartProduct = {
     id: product._id,
     name: product.name,
-    price: product.price,
+    price: hasSale ? normalizedSalePrice : product.price,
     imageUrl: mainImage,
     slug: product.slug,
     brand: "Unknown",
@@ -121,17 +124,29 @@ export default function ProductDetail() {
       </nav>
 
       {/* Product layout */}
-      <div className="flex flex-col md:flex-row gap-8">
+      <div className="flex flex-col md:flex-row gap-8 relative">
         {/* Left: Image */}
-        <div className="md:w-1/2 flex flex-col items-center gap-2">
+        <div className="md:w-1/2 flex flex-col items-center gap-2 relative">
+          {/* Badge Pill */}
+          <div className="absolute -top-2 -left-2 z-10 flex flex-col gap-2">
+            {hasSale && (
+              <span className="text-xs font-bold px-6 py-3 rounded-full shadow-md bg-red-600 text-white">
+                ON SALE
+              </span>
+            )}
+            {product.badge === "new" && !hasSale && (
+              <span className="text-xs font-bold px-6 py-3 rounded-full shadow-md bg-green-500 text-white">
+                NEW
+              </span>
+            )}
+          </div>
+
           <img
             src={mainImage}
             alt={product.name}
             className="w-full max-w-md rounded-lg cursor-pointer"
             onClick={() => setShowModal(true)}
           />
-
-          {/* Thumbnails */}
           <div className="flex gap-2 mt-2">
             {product.images.map((img, idx) => (
               <img
@@ -148,13 +163,6 @@ export default function ProductDetail() {
 
         {/* Right: Product Info */}
         <div className="md:w-1/2 flex flex-col gap-3">
-          {/* On Sale Badge */}
-          {product.salePrice && (
-            <span className="bg-red-600 text-white px-3 py-1 rounded-full text-sm font-semibold w-max">
-              ON SALE
-            </span>
-          )}
-
           <h1 className="text-3xl font-bold">{product.name}</h1>
 
           {product.shortDesc && (
@@ -166,11 +174,7 @@ export default function ProductDetail() {
             {Array.from({ length: 5 }, (_, i) => (
               <FaStar
                 key={i}
-                className={
-                  i < (product.rating || 0)
-                    ? "text-yellow-400"
-                    : "text-gray-300"
-                }
+                className={i < (product.rating || 0) ? "text-yellow-400" : "text-gray-300"}
               />
             ))}
             <span className="text-gray-600 ml-2">{product.sold || 0} sold</span>
@@ -178,25 +182,21 @@ export default function ProductDetail() {
 
           {/* Price */}
           <div className="flex items-center gap-2 mt-2">
-            {product.salePrice ? (
+            {hasSale ? (
               <>
-                <span className="text-gray-500 line-through text-lg">
-                  ${product.salePrice}
-                </span>
+                <span className="text-gray-500 line-through text-lg">${product.price}</span>
                 <span className="text-2xl font-bold text-red-600">
-                  ${product.price}
+                  ${normalizedSalePrice}
                 </span>
               </>
             ) : (
-              <span className="text-2xl font-bold text-red-600">
-                ${product.price}
-              </span>
+              <span className="text-2xl font-bold text-red-600">${product.price}</span>
             )}
           </div>
 
           {/* Features */}
           {product.features && (
-            <ul className="list-disc list-inside text-red-700">
+            <ul className="list-disc list-inside text-red-700 mt-2">
               {product.features.map((feature, idx) => (
                 <li key={idx}>{feature}</li>
               ))}
@@ -252,25 +252,7 @@ export default function ProductDetail() {
         </div>
       )}
 
-      {/* Reviews Toggle */}
-      <div className="mt-6">
-        <button
-          onClick={() => setShowReviews((prev) => !prev)}
-          className="text-blue-600 font-semibold underline"
-        >
-          {showReviews ? "Hide Reviews" : "Show Reviews"}
-        </button>
-
-        {showReviews && (
-          <div className="mt-4 border-t pt-4">
-            <p className="text-gray-700">
-              No reviews yet. Be the first to review!
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* Modal for all images */}
+      {/* Modal for images */}
       <AnimatePresence>
         {showModal && (
           <motion.div
