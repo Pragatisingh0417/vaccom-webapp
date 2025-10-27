@@ -44,6 +44,8 @@ export default function HomeProductsSection() {
     fetchProducts();
   }, [activeCategory]);
 
+  console.log(products);
+
   return (
     <section className="py-12 bg-red-50">
       <div className="max-w-7xl mx-auto px-4">
