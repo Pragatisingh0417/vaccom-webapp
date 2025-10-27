@@ -1,3 +1,5 @@
+// vacuum-app (1)\vacuum-app\src\app\product-category\[slug]
+
 "use client";
 
 import ProductCard from "@/app/components/ProductCard";

@@ -1,5 +1,6 @@
-"use client";
+// vacuum-app (1)\vacuum-app\src\app\products\[slug]
 
+"use client";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { FaStar } from "react-icons/fa";
@@ -42,7 +43,9 @@ export default function ProductDetail() {
     if (!slug) return;
     const fetchProduct = async () => {
       try {
-        const res = await fetch(`/api/products/${encodeURIComponent(slug)}`);
+        // const res = await fetch(`/api/products/${encodeURIComponent(slug)}`);
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "";
+const res = await fetch(`${baseUrl}/api/products/${encodeURIComponent(slug)}`);
         if (!res.ok) throw new Error("Failed to fetch product");
         const data = await res.json();
         setProduct(data);
