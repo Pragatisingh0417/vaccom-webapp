@@ -1,6 +1,6 @@
 'use client';
 import React from 'react';
-import Link from 'next/link'; // ✅ import Link
+import Image from 'next/image';
 
 const brands = [
   { name: 'Midea', src: '/brand-image/Midea_Logo.png' },
@@ -28,25 +28,42 @@ const brands = [
 
 export default function TopCleaningBrands() {
   return (
-    <section className="bg-white py-12">
-      <div className="max-w-7xl mx-auto px-4 text-center">
-        <h2 className="text-[30px] md:text-[40px] font-extrabold text-red-600 mb-10">
+    <section className="bg-white py-10 sm:py-12 lg:py-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h2 className="text-[22px] sm:text-[28px] md:text-[36px] lg:text-[42px] font-extrabold text-red-600 mb-8 sm:mb-10">
           Top Cleaning Brands
         </h2>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6 items-center justify-center">
+        <div
+          className="
+            grid 
+            grid-cols-5
+            sm:grid-cols-3 
+            md:grid-cols-4 
+            lg:grid-cols-6 
+            xl:grid-cols-7 
+            gap-4 
+            sm:gap-6 
+            md:gap-8
+            items-center 
+            justify-center
+          "
+        >
           {brands.map((brand, index) => (
-            <Link
+            <div
               key={index}
-              href={`/brands/${brand.name.toLowerCase().replace(/\+/g, '').replace(/\s/g, '-')}`} // ✅ dynamic link
-              className="flex items-center justify-center"
+              className="flex items-center justify-center p-2 sm:p-3 md:p-4 hover:scale-105 transition-transform duration-300"
             >
-              <img
-                src={brand.src}
-                alt={brand.name}
-                className="max-h-22 object-contain hover:scale-105 transition-transform"
-              />
-            </Link>
+              <div className="relative w-[100px] h-[50px] sm:w-[130px] sm:h-[60px] md:w-[150px] md:h-[70px] lg:w-[160px] lg:h-[80px]">
+                <Image
+                  src={brand.src}
+                  alt={brand.name}
+                  fill
+                  sizes="(max-width: 640px) 100px, (max-width: 768px) 130px, (max-width: 1024px) 150px, 160px"
+                  className="object-contain"
+                />
+              </div>
+            </div>
           ))}
         </div>
       </div>

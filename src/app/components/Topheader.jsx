@@ -14,11 +14,9 @@ export default function ContactHeader() {
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
-  const profileRef = useRef();
-
+  const profileRef = useRef(null);
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState(null);
-
   const router = useRouter();
 
   // ✅ Get user from localStorage
@@ -40,14 +38,9 @@ export default function ContactHeader() {
   // ✅ Load and sync user
   useEffect(() => {
     const updateUser = () => setUser(getStoredUser());
-
-    // Run once on mount
     updateUser();
-
-    // Keep multiple tabs + login sync
     window.addEventListener("storage", updateUser);
     window.addEventListener("userUpdated", updateUser);
-
     return () => {
       window.removeEventListener("storage", updateUser);
       window.removeEventListener("userUpdated", updateUser);
@@ -60,14 +53,13 @@ export default function ContactHeader() {
       clearAuth();
       setUser(null);
       router.push("/auth");
-      // notify all listeners
       window.dispatchEvent(new Event("userUpdated"));
     } catch (error) {
       console.error("Logout failed:", error);
     }
   };
 
-  // Close profile dropdown on outside click
+  // ✅ Close profile dropdown on outside click
   useEffect(() => {
     function handleClickOutside(e) {
       if (profileRef.current && !profileRef.current.contains(e.target)) {
@@ -79,46 +71,51 @@ export default function ContactHeader() {
   }, []);
 
   return (
-    <div className="bg-blue-50 border-b sticky top-0 z-50">
-      <div className="px-4 py-3 flex flex-col md:flex-row justify-between items-center max-w-7xl mx-auto gap-4">
+    // Hidden on mobile, visible on md+
+    <div className="hidden md:block bg-blue-50 border-b sticky top-0 z-50">
+      <div className="px-6 py-3 flex flex-wrap lg:flex-nowrap justify-between items-center max-w-7xl mx-auto gap-6">
+
         {/* Logo */}
         <div className="flex items-center gap-4">
           <div className="flex-shrink-0">
             <Image src="/vaccom-logo.png" alt="Vaccom Logo" width={180} height={100} />
           </div>
-          <div className="w-px h-16 bg-gray-400" />
+          <div className="hidden lg:block w-px h-16 bg-gray-400" />
         </div>
 
         {/* Contact Info */}
-        <div className="flex flex-col md:flex-row md:items-center gap-5 text-[18px] text-gray-800 text-center md:text-left flex-1 justify-center">
+        <div className="flex flex-col lg:flex-row lg:items-center gap-5 text-[16px] text-gray-800 text-center lg:text-left flex-1 justify-center">
           <div className="flex items-center gap-2">
             <FiMapPin className="text-red-600" />
             <span>
-              158 Centre Dandenong <br />
+              158 Centre Dandenong <br className="hidden xl:block" />
               Rd. Victoria 3192
             </span>
           </div>
+
           <div className="flex items-center gap-2">
             <FiMail className="text-blue-600" />
             <span>support@vaccom.com.au</span>
           </div>
-          <button className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-full whitespace-nowrap">
+
+          <button className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-full hover:bg-red-700 transition">
             <FiPhone />
             0397 409 390
           </button>
-          <button className="bg-black text-white px-4 py-2 rounded-full whitespace-nowrap">
+
+          <button className="bg-black text-white px-4 py-2 rounded-full hover:bg-gray-800 transition">
             Schedule A Call Now
           </button>
         </div>
 
-        {/* Icons: Wishlist + Profile + Cart */}
+        {/* Icons */}
         <div className="flex items-center gap-6 relative">
           {/* Wishlist */}
           <Link href="/wishlist" aria-label="Wishlist" className="text-2xl text-red-700 hover:text-red-600 transition">
             <FaHeart />
           </Link>
 
-          {/* Profile with dropdown */}
+          {/* Profile */}
           <div ref={profileRef} className="relative cursor-pointer text-lg text-black">
             <div
               tabIndex={0}
@@ -144,7 +141,7 @@ export default function ContactHeader() {
             </div>
 
             {profileDropdownOpen && (
-              <div className="absolute right-0 top-full text-base mt-2 w-72 bg-white text-black rounded shadow-lg z-20 py-2 px-3">
+              <div className="absolute right-0 top-full mt-2 w-72 bg-white text-black rounded shadow-lg z-20 py-2 px-3">
                 {user ? (
                   <>
                     <span className="text-gray-700">Welcome, <b>{user.name}</b> 👋</span>
@@ -177,8 +174,6 @@ export default function ContactHeader() {
                 </span>
               )}
             </button>
-
-            {/* Drawer */}
             <CartDrawer isOpen={isOpen} onClose={() => setIsOpen(false)} />
           </div>
         </div>

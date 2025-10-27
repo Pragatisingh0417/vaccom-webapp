@@ -1,3 +1,4 @@
+// vacuum-app (1)\vacuum-app\src\app\product-brand\[slug]
 "use client";
 
 import { useState, useEffect } from "react";

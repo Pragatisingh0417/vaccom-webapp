@@ -12,25 +12,32 @@ const formatCurrency = (amount) => {
 
 export default function CartDrawer({ isOpen, onClose }) {
   const router = useRouter();
-  const { cart, removeFromCart, clearCart, increaseQuantity, decreaseQuantity } =
-    useCart();
+  const { cart, removeFromCart, increaseQuantity, decreaseQuantity } = useCart();
 
-  // ✅ Calculate total
   const total = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
 
   return (
     <div
-      className={`fixed inset-0 z-50 transition-transform duration-300 ${
+      className={`fixed inset-0 z-[9999] transition-transform duration-300 ${
         isOpen ? "translate-x-0" : "translate-x-full"
       }`}
     >
       {/* Overlay */}
-      <div className="absolute inset-0 bg-black/50" onClick={onClose}></div>
+      <div
+        className={`fixed inset-0 bg-black/50 transition-opacity duration-300 ${
+          isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={onClose}
+      ></div>
 
       {/* Drawer */}
-      <div className="absolute right-0 top-0 h-full w-96 bg-white shadow-xl flex flex-col">
+      <div
+        className={`fixed top-0 right-0 h-full w-full sm:w-96 bg-white shadow-2xl flex flex-col transform transition-transform duration-300 ${
+          isOpen ? "translate-x-0" : "translate-x-full"
+        } z-[10000]`}
+      >
         {/* Header */}
-        <div className="flex justify-between items-center p-4 border-b">
+        <div className="flex justify-between items-center p-4 border-b bg-white sticky top-0 z-10">
           <h2 className="text-xl font-bold">Your Cart</h2>
           <button onClick={onClose}>
             <FiX size={24} />
@@ -40,7 +47,9 @@ export default function CartDrawer({ isOpen, onClose }) {
         {/* Cart Items */}
         <div className="flex-1 overflow-y-auto p-4">
           {cart.length === 0 ? (
-            <p className="text-gray-600 text-center mt-10">Your cart is empty</p>
+            <p className="text-gray-600 text-center mt-10">
+              Your cart is empty
+            </p>
           ) : (
             <ul className="space-y-4">
               {cart.map((item) => (
@@ -90,19 +99,18 @@ export default function CartDrawer({ isOpen, onClose }) {
 
         {/* Footer */}
         {cart.length > 0 && (
-          <div className="p-4 border-t flex flex-col gap-3">
-            {/* ✅ Show total in USD */}
-            <div className="flex justify-between items-center">
+          <div className="p-4 border-t bg-white sticky bottom-0 z-10">
+            <div className="flex justify-between items-center mb-3">
               <span className="font-semibold text-lg">Total:</span>
               <span className="text-green-600 font-bold text-lg">
                 {formatCurrency(total)}
               </span>
             </div>
 
-            <div className="flex justify-between items-center gap-3">
+            <div className="flex justify-between gap-3">
               <button
                 onClick={onClose}
-                className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 py-2 rounded"
+                className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 py-2 rounded w-1/2"
               >
                 Continue Shopping
               </button>
@@ -111,7 +119,7 @@ export default function CartDrawer({ isOpen, onClose }) {
                   onClose();
                   router.push("/checkout");
                 }}
-                className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded"
+                className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded w-1/2"
               >
                 Checkout
               </button>
