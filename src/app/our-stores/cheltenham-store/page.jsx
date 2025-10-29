@@ -58,21 +58,27 @@ export default function CheltenhamPage() {
     <aside className="space-y-2"> {/* Slightly reduced vertical spacing */}
       <div>
         <h4 className="text-[22px] font-semibold mb-2">Location: Cheltenham</h4>
-        <ul className="text-[16px] font-medium text-gray-900 space-y-2">
-          {[
-            'Dyson Vacuum Repair and Services',
-            'Electrolux Vacuum Repair and Services',
-            'Hoover Vacuum Repair and Services',
-            'Miele Vacuum Repair and Services',
-            'Robot Vacuum Repair and Services',
-            'Shark Vacuum Repair and Services'
-          ].map((service, idx) => (
-            <li key={idx}>
-              → {service}
-              <hr className="border-gray-200 my-1" />
-            </li>
-          ))}
-        </ul>
+       <ul className="text-[16px] font-medium text-gray-900 space-y-2">
+  {[
+    { name: 'Dyson Vacuum Repair and Services', link: '/dyson-vaccum-repair-and-services-in-cheltenham' },
+    { name: 'Electrolux Vacuum Repair and Services', link: '/electrolux-vaccum-repair-and-services-in-cheltenham' },
+    { name: 'Hoover Vacuum Repair and Services', link: '/hoover-vaccum-repair-and-services-in-cheltenham' },
+    { name: 'Miele Vacuum Repair and Services', link: '/miele-vaccum-repair-and-services-in-cheltenham' },
+    { name: 'Robot Vacuum Repair and Services', link: '/robot-vaccum-repair-and-services-in-cheltenham' },
+    { name: 'Shark Vacuum Repair and Services', link: '/shark-vaccum-repair-and-services-in-cheltenham' },
+  ].map((service, idx) => (
+    <li key={idx}>
+      <Link
+        href={service.link}
+        className="hover:text-red-600 transition-colors duration-200"
+      >
+        → {service.name}
+      </Link>
+      <hr className="border-gray-200 my-1" />
+    </li>
+  ))}
+</ul>
+
       </div>
     </aside>
   </div>
