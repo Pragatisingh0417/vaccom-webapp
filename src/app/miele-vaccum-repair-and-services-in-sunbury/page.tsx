@@ -16,7 +16,7 @@ export default function Hovervaccum() {
             >
                 <div className="text-white max-w-4xl space-y-4 mx-auto md:mx-0">
                     <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold text-center md:text-left px-4 sm:px-6 md:px-10">
-                       Miele Vacuum Repair and Services in Cheltenham
+                       Miele Vacuum Repair and Services in Sunbury
    </h1>
                 </div>
             </section>
@@ -32,7 +32,7 @@ export default function Hovervaccum() {
                     </h2>
 
                     <p className="text-gray-700 text-base sm:text-lg leading-relaxed mb-8 text-center md:text-left">
-Get your Miele vacuum back to peak performance with our expert repair and maintenance services in Cheltenham. From reduced suction and motor issues to worn-out filters or broken parts, we handle all Miele models with care and precision. Our skilled technicians provide fast diagnostics, use genuine Miele parts, and deliver dependable repairs—so your vacuum stays strong and your home stays spotless, stress-free.
+Get your Miele vacuum back to peak performance with our expert repair and maintenance services in Sunbury. From reduced suction and motor issues to worn-out filters or broken parts, we handle all Miele models with care and precision. Our skilled technicians provide fast diagnostics, use genuine Miele parts, and deliver dependable repairs—so your vacuum stays strong and your home stays spotless, stress-free.
 
 
 
@@ -113,7 +113,8 @@ Get your Miele vacuum back to peak performance with our expert repair and mainte
                     </h2>
                     <div className="h-1 w-20 bg-red-600 mb-5 mx-auto md:mx-0"></div>
                     <p className="text-gray-700 text-base sm:text-lg leading-relaxed mb-8">
-                        At Vaccom, we repair all vacuum models from top brands like Dyson, Miele, Hoover, Electrolux, Wertheim, and Nilfisk. Our experienced technicians use only high-quality, manufacturer-approved parts to ensure your vacuum performs like new. Every service includes a warranty, and we’re proud to offer honest advice, fast support, and exceptional customer care you can rely on.
+Vaccom is Melbourne’s trusted name in vacuum repair and maintenance. We specialise in servicing all major brands, including Dyson, Miele, Hoover, Electrolux, Wertheim, and Nilfisk. Our skilled technicians use only genuine, manufacturer-approved parts to ensure reliable, long-lasting results. With a strong focus on customer satisfaction, fast turnaround times, and honest service, Vaccom is your go-to choice for expert vacuum repairs.
+
                     </p>
                 </div>
             </section>

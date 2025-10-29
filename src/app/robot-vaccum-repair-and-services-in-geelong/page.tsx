@@ -11,12 +11,13 @@ export default function Hovervaccum() {
         <main>
             {/* Hero Section */}
             <section
-                className="w-full h-[400px] sm:h-[500px] md:h-[600px] lg:h-[500px] bg-cover bg-center flex items-center text-left px-4 sm:px-6 md:px-10"
-                style={{ backgroundImage: "url('/images/imgi_17_melie-image-.webp')" }}
+                className="w-full h-[400px] sm:h-[500px] md:h-[600px] lg:h-[700px] bg-cover bg-center flex items-center text-left px-4 sm:px-6 md:px-10"
+                style={{ backgroundImage: "url('/images/vaccom web image .webp')" }}
             >
                 <div className="text-white max-w-4xl space-y-4 mx-auto md:mx-0">
                     <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold text-center md:text-left px-4 sm:px-6 md:px-10">
-                       Miele Vacuum Repair and Services in Cheltenham
+                      Robot Vacuum Repair and Services in Geelong
+
    </h1>
                 </div>
             </section>
@@ -28,11 +29,12 @@ export default function Hovervaccum() {
                 {/* Text Content */}
                 <div>
                     <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-red-600 mb-4 leading-snug text-center md:text-left">
-                        Restore Power to Your Miele   <br /> with Expert Repairs
+                        Restore Power to Your Robot   <br /> More Suction Problems
                     </h2>
 
                     <p className="text-gray-700 text-base sm:text-lg leading-relaxed mb-8 text-center md:text-left">
-Get your Miele vacuum back to peak performance with our expert repair and maintenance services in Cheltenham. From reduced suction and motor issues to worn-out filters or broken parts, we handle all Miele models with care and precision. Our skilled technicians provide fast diagnostics, use genuine Miele parts, and deliver dependable repairs—so your vacuum stays strong and your home stays spotless, stress-free.
+Get your robot vacuum running like new with our expert repair and maintenance services in Geelong. Whether it’s connectivity problems, battery issues, navigation faults, or worn-out brushes, we service all major robot vacuum brands with precision and care. Our experienced technicians provide fast diagnostics, genuine replacement parts, and dependable repairs—so your robot stays smart, efficient, and ready to keep your floors spotless without the stress.
+
 
 
 
@@ -113,7 +115,8 @@ Get your Miele vacuum back to peak performance with our expert repair and mainte
                     </h2>
                     <div className="h-1 w-20 bg-red-600 mb-5 mx-auto md:mx-0"></div>
                     <p className="text-gray-700 text-base sm:text-lg leading-relaxed mb-8">
-                        At Vaccom, we repair all vacuum models from top brands like Dyson, Miele, Hoover, Electrolux, Wertheim, and Nilfisk. Our experienced technicians use only high-quality, manufacturer-approved parts to ensure your vacuum performs like new. Every service includes a warranty, and we’re proud to offer honest advice, fast support, and exceptional customer care you can rely on.
+Vaccom is Melbourne’s trusted name in vacuum repair and maintenance. We specialise in servicing all major brands, including Dyson, Miele, Hoover, Electrolux, Wertheim, and Nilfisk. Our skilled technicians use only genuine, manufacturer-approved parts to ensure reliable, long-lasting results. With a strong focus on customer satisfaction, fast turnaround times, and honest service, Vaccom is your go-to choice for expert vacuum repairs.
+
                     </p>
                 </div>
             </section>
@@ -132,13 +135,15 @@ Get your Miele vacuum back to peak performance with our expert repair and mainte
                 {/* Text Content */}
                 <div className="text-center md:text-left">
                     <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-black mb-4 leading-snug">
-Miele Vacuum Repair & Service
+Robot Vacuum Repair & Service
                     </h2>
                     <p className="text-gray-700 text-base sm:text-lg leading-relaxed mb-8">
 
-You may be surprised how affordable our comprehensive Miele vacuum service really is.
 
-If your Miele is losing suction, making unusual noises, overheating, or simply not performing like it used to, it’s time to let our experts take a look. Bring it in for a free, no-obligation estimate. Our certified technicians are experienced in servicing and repairing all Miele models. Visit us today or contact us to book your free quote—we’re here to help!                    </p>
+You may be surprised how affordable our thorough robot vacuum service really is.
+
+If your robot vacuum isn’t charging, missing spots, getting stuck, or showing error messages, it’s time to let the experts take a look. Bring it in for a free, no-obligation estimate. Our experienced technicians repair all major robot vacuum brands and models with precision and care. Visit us today or contact us to book your free quote—we’ll get your robot back to cleaning in no time!                  
+   </p>
 
                     {/* Buttons Row */}
                     <div className="flex flex-row flex-wrap justify-center md:justify-start gap-4">

@@ -101,7 +101,7 @@ export default function ContactHeader() {
           </div>
 
           <div className="flex items-center gap-2">
-            <FiMail className="text-blue-600" />
+            <FiMail className="text-red-600" />
             <span>support@vaccom.com.au</span>
           </div>
 

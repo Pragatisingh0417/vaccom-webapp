@@ -11,13 +11,13 @@ export default function Hovervaccum() {
         <main>
             {/* Hero Section */}
             <section
-                className="w-full h-[400px] sm:h-[500px] md:h-[600px] lg:h-[500px] bg-cover bg-center flex items-center text-left px-4 sm:px-6 md:px-10"
-                style={{ backgroundImage: "url('/images/imgi_17_melie-image-.webp')" }}
+                className="w-full h-[400px] sm:h-[500px] md:h-[600px] lg:h-[600px] bg-cover bg-center flex items-center text-left px-4 sm:px-6 md:px-10"
+                style={{ backgroundImage: "url('/images/imgi_16_hoover.webp')" }}
             >
                 <div className="text-white max-w-4xl space-y-4 mx-auto md:mx-0">
                     <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold text-center md:text-left px-4 sm:px-6 md:px-10">
-                       Miele Vacuum Repair and Services in Cheltenham
-   </h1>
+                        Hoover Vaccum Repair
+                        and Services in Geelong    </h1>
                 </div>
             </section>
 
@@ -28,12 +28,11 @@ export default function Hovervaccum() {
                 {/* Text Content */}
                 <div>
                     <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-red-600 mb-4 leading-snug text-center md:text-left">
-                        Restore Power to Your Miele   <br /> with Expert Repairs
+                        Restore Power to Your Hoover  <br /> with Expert Repairs
                     </h2>
 
                     <p className="text-gray-700 text-base sm:text-lg leading-relaxed mb-8 text-center md:text-left">
-Get your Miele vacuum back to peak performance with our expert repair and maintenance services in Cheltenham. From reduced suction and motor issues to worn-out filters or broken parts, we handle all Miele models with care and precision. Our skilled technicians provide fast diagnostics, use genuine Miele parts, and deliver dependable repairs—so your vacuum stays strong and your home stays spotless, stress-free.
-
+                        Get your Hoover vacuum performing like new with our expert repair and maintenance services in Geelong. Whether you’re dealing with reduced suction, motor issues, or worn-out components, we service all Hoover models with care and precision. Our skilled technicians provide quick diagnostics, use genuine Hoover parts, and deliver reliable repairs—so your vacuum stays powerful and your home stays spotless, without the hassle.
 
 
                     </p>
@@ -59,7 +58,7 @@ Get your Miele vacuum back to peak performance with our expert repair and mainte
                 {/* Image */}
                 <div className="flex justify-center mt-8 md:mt-0">
                     <img
-                        src="/images/restore power.webp"
+                        src="/images/imgi_17_Hoover-CleanSlate-Cordless-01-1024x1024-1.webp"
                         alt="Dyson Vacuum Repair"
                         className="rounded-lg shadow-md w-full sm:w-[85%] md:w-[90%] lg:w-[80%] object-cover"
                     />
@@ -96,7 +95,7 @@ Get your Miele vacuum back to peak performance with our expert repair and mainte
                     {/* Right Image */}
                     <div className="flex justify-center mt-8 md:mt-0">
                         <img
-                            src="/images/your vaccom .webp"
+                            src="/images/imgi_5_Hoover-Allergy-Bagged-Vacuum-Cleaner-2-removebg-preview-333x333 (1) (1).webp"
                             alt="Vacuum repair service"
                             className="rounded-lg shadow-lg w-full sm:w-[80%] md:w-[60%] lg:w-[50%] object-cover"
                         />
@@ -123,7 +122,7 @@ Get your Miele vacuum back to peak performance with our expert repair and mainte
                 {/* Image */}
                 <div className="flex justify-center">
                     <img
-                        src="/images/dayson vaccom repair.webp"
+                        src="/images/imgi_5_Hoover-Allergy-Bagged-Vacuum-Cleaner-2-removebg-preview-333x333 (1) (1).webp"
                         alt="Dyson Vacuum Repair"
                         className="rounded-lg shadow-md w-full sm:w-[85%] md:w-[90%] lg:w-[80%] object-cover"
                     />
@@ -132,13 +131,13 @@ Get your Miele vacuum back to peak performance with our expert repair and mainte
                 {/* Text Content */}
                 <div className="text-center md:text-left">
                     <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-black mb-4 leading-snug">
-Miele Vacuum Repair & Service
+                        Hoover Vacuum Repair & Service
                     </h2>
                     <p className="text-gray-700 text-base sm:text-lg leading-relaxed mb-8">
+                        You may be surprised how affordable our thorough Hoover vacuum service really is.
 
-You may be surprised how affordable our comprehensive Miele vacuum service really is.
-
-If your Miele is losing suction, making unusual noises, overheating, or simply not performing like it used to, it’s time to let our experts take a look. Bring it in for a free, no-obligation estimate. Our certified technicians are experienced in servicing and repairing all Miele models. Visit us today or contact us to book your free quote—we’re here to help!                    </p>
+                        If your Hoover is losing suction, won’t power on, has a strange smell, or just isn’t cleaning like it used to, it’s time to let the experts take a look. Bring it in for a free, no-obligation estimate. Our certified technicians have the experience and tools to repair all Hoover models. Visit us today or contact us to book your free quote—we’re here to get your vacuum back in top shape!
+                    </p>
 
                     {/* Buttons Row */}
                     <div className="flex flex-row flex-wrap justify-center md:justify-start gap-4">
