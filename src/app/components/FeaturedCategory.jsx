@@ -73,14 +73,14 @@ export default function FeaturedCategory() {
         </Swiper>
 
         {/* CTA Button */}
-        <div className="text-center mt-10">
+        {/* <div className="text-center mt-10">
           <Link
             href="/product-category/today-deals"
             className="bg-[#d60000] hover:bg-[#b80000] text-white px-5 sm:px-8 py-3 text-sm sm:text-base font-medium rounded-md transition"
           >
-            View Our Product Range
+            View All Products 
           </Link>
-        </div>
+        </div> */}
       </div>
     </section>
   );

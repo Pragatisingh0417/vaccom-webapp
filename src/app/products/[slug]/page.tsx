@@ -1,5 +1,3 @@
-// vacuum-app (1)\vacuum-app\src\app\products\[slug]
-
 "use client";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -35,6 +33,10 @@ export default function ProductDetail() {
   const [mainImage, setMainImage] = useState<string>("");
   const [showModal, setShowModal] = useState(false);
 
+  // 👇 added new toast states
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+
   const { cart, addToCart, increaseQuantity, decreaseQuantity } = useCart();
   const { wishlist, addToWishlist, removeFromWishlist } = useWishlist();
 
@@ -43,9 +45,8 @@ export default function ProductDetail() {
     if (!slug) return;
     const fetchProduct = async () => {
       try {
-        // const res = await fetch(`/api/products/${encodeURIComponent(slug)}`);
         const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "";
-const res = await fetch(`${baseUrl}/api/products/${encodeURIComponent(slug)}`);
+        const res = await fetch(`${baseUrl}/api/products/${encodeURIComponent(slug)}`);
         if (!res.ok) throw new Error("Failed to fetch product");
         const data = await res.json();
         setProduct(data);
@@ -69,11 +70,8 @@ const res = await fetch(`${baseUrl}/api/products/${encodeURIComponent(slug)}`);
   if (loading) return <p className="text-center mt-10">Loading...</p>;
   if (!product) return <p className="text-center mt-10">Product not found</p>;
 
-  // Normalize sale price
   const normalizedSalePrice =
-    product.salePrice !== undefined && product.salePrice !== null
-      ? Number(product.salePrice)
-      : 0;
+    product.salePrice && product.salePrice < product.price ? product.salePrice : 0;
   const hasSale = normalizedSalePrice > 0 && normalizedSalePrice < product.price;
 
   const productForCart: CartProduct = {
@@ -101,9 +99,16 @@ const res = await fetch(`${baseUrl}/api/products/${encodeURIComponent(slug)}`);
     setTimeout(() => setNotify(""), 2000);
   };
 
+  // 👇 handle add to cart + toast
+  const handleAddToCart = () => {
+    addToCart(productForCart, quantity);
+    setToastMessage(`${product.name} added to cart!`);
+    setShowToast(true);
+  };
+
   return (
     <div className="p-6 max-w-6xl mx-auto relative">
-      {/* Toast Notification */}
+      {/* Wishlist small toast */}
       <AnimatePresence>
         {notify && (
           <motion.div
@@ -120,17 +125,54 @@ const res = await fetch(`${baseUrl}/api/products/${encodeURIComponent(slug)}`);
         )}
       </AnimatePresence>
 
+      {/* 👇 Main Toast (centered View Cart toast) */}
+    {/* 👇 Animated Top Toast (fixed below header) */}
+<AnimatePresence>
+  {showToast && (
+    <motion.div
+      initial={{ opacity: 0, y: -40 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -40 }}
+      transition={{ duration: 0.4, ease: "easeInOut" }}
+      className="fixed top-52 left-1/2 transform -translate-x-1/2 z-50 w-[90vw] sm:w-auto max-w-2xl"
+    >
+      <div className="relative bg-red-600 text-white px-8 py-4 rounded-lg shadow-lg text-base flex flex-col sm:flex-row items-center gap-4 pointer-events-auto">
+        {/* Close (X) icon */}
+        <button
+          onClick={() => setShowToast(false)}
+          className="absolute top-2 right-3 text-white text-xl font-bold hover:text-gray-200 transition"
+          aria-label="Close"
+        >
+          ×
+        </button>
+
+        {/* Toast message */}
+        <span className="text-center">{toastMessage}</span>
+
+        {/* View Cart button */}
+        <a
+          href="/cart"
+          className="bg-white text-red-600 px-4 py-2 rounded-md font-semibold hover:bg-gray-100 transition"
+        >
+          View Cart
+        </a>
+      </div>
+    </motion.div>
+  )}
+</AnimatePresence>
+
+
+
       {/* Breadcrumbs */}
-      <nav className="text-sm mb-4 text-gray-600">
+      {/* <nav className="text-sm mb-4 text-gray-600">
         <span className="hover:underline cursor-pointer">Home</span> &gt;{" "}
         <span className="hover:underline cursor-pointer">Category</span>
-      </nav>
+      </nav> */}
 
       {/* Product layout */}
-      <div className="flex flex-col md:flex-row gap-8 relative">
+      <div className="flex flex-col md:flex-row gap-8 relative mt-20">
         {/* Left: Image */}
         <div className="md:w-1/2 flex flex-col items-center gap-2 relative">
-          {/* Badge Pill */}
           <div className="absolute -top-2 -left-2 z-10 flex flex-col gap-2">
             {hasSale && (
               <span className="text-xs font-bold px-6 py-3 rounded-full shadow-md bg-red-600 text-white">
@@ -168,9 +210,7 @@ const res = await fetch(`${baseUrl}/api/products/${encodeURIComponent(slug)}`);
         <div className="md:w-1/2 flex flex-col gap-3">
           <h1 className="text-3xl font-bold">{product.name}</h1>
 
-          {product.shortDesc && (
-            <p className="text-gray-700">{product.shortDesc}</p>
-          )}
+          {product.shortDesc && <p className="text-gray-700">{product.shortDesc}</p>}
 
           {/* Rating */}
           <div className="flex items-center gap-2 text-yellow-500">
@@ -188,9 +228,7 @@ const res = await fetch(`${baseUrl}/api/products/${encodeURIComponent(slug)}`);
             {hasSale ? (
               <>
                 <span className="text-gray-500 line-through text-lg">${product.price}</span>
-                <span className="text-2xl font-bold text-red-600">
-                  ${normalizedSalePrice}
-                </span>
+                <span className="text-2xl font-bold text-red-600">${normalizedSalePrice}</span>
               </>
             ) : (
               <span className="text-2xl font-bold text-red-600">${product.price}</span>
@@ -226,7 +264,7 @@ const res = await fetch(`${baseUrl}/api/products/${encodeURIComponent(slug)}`);
               </div>
             ) : (
               <button
-                onClick={() => addToCart(productForCart, quantity)}
+                onClick={handleAddToCart}
                 className="flex-1 flex items-center justify-center gap-2 bg-black text-white px-6 py-2 rounded hover:opacity-90 transition"
               >
                 Add To Cart

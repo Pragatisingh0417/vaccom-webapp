@@ -70,19 +70,38 @@ export default function ProductCard({ product, view = "grid" }: Props) {
   return (
     <>
       {/* Toast */}
-      <div
-        className={`fixed top-4 left-1/2 transform -translate-x-1/2 z-50 transition-all duration-500 ease-in-out pointer-events-none`}
-        style={{
-          opacity: showToast ? 1 : 0,
-          transform: showToast
-            ? "translateX(-50%) translateY(0)"
-            : "translateX(-50%) translateY(-20px)",
-        }}
+{showToast && (
+  <div
+    className={`fixed inset-0 flex items-center justify-center z-50 transition-all duration-500 ease-in-out`}
+    style={{
+      opacity: showToast ? 1 : 0,
+      transform: showToast ? "translateY(0)" : "translateY(-20px)",
+    }}
+  >
+    <div className="relative bg-red-600 text-white px-8 py-5 rounded-lg shadow-lg text-base flex flex-col sm:flex-row items-center gap-4 pointer-events-auto">
+      {/* Close (X) icon */}
+      <button
+        onClick={() => setShowToast(false)}
+        className="absolute top-2 right-3 text-white text-xl font-bold hover:text-gray-200 transition"
+        aria-label="Close"
       >
-        <div className="bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg text-sm">
-          {toastMessage}
-        </div>
-      </div>
+        ×
+      </button>
+
+      {/* Toast message */}
+      <span className="text-center">{toastMessage}</span>
+
+      {/* View Cart button */}
+      <a
+        href="/cart"
+        className="bg-white text-red-600 px-4 py-2 rounded-md font-semibold hover:bg-gray-100 transition"
+      >
+        View Cart
+      </a>
+    </div>
+  </div>
+)}
+
 
       <div
         className={`relative bg-white border rounded-2xl shadow-sm hover:shadow-xl transition transform hover:-translate-y-1 p-4
@@ -91,7 +110,7 @@ export default function ProductCard({ product, view = "grid" }: Props) {
         {/* Wishlist */}
         <button
           onClick={handleWishlist}
-          className="absolute bottom-5 right-3 p-2 rounded-full bg-white shadow hover:scale-110 transition"
+          className="absolute top-5 right-3 p-2 rounded-full bg-white z-50 shadow hover:scale-110 transition"
         >
           <FiHeart
             className={`w-6 h-6 ${inWishlist ? "fill-red-500 text-red-500" : "text-gray-500"}`}
@@ -152,36 +171,48 @@ export default function ProductCard({ product, view = "grid" }: Props) {
           </div>
 
           {/* Add to Cart */}
-          <div className="flex gap-2 mt-4">
-            {cartItem ? (
-              <div className="flex items-center gap-2 border rounded-full px-6 py-1 bg-gray-50">
-                <button
-                  onClick={() => decreaseQuantity(cartItem.id, 1)}
-                  className="bg-gray-200 px-3 py-1 rounded-full hover:bg-gray-300"
-                >
-                  -
-                </button>
-                <span className="font-medium">{cartItem.quantity}</span>
-                <button
-                  onClick={() => increaseQuantity(cartItem.id, 1)}
-                  className="bg-gray-200 px-3 py-1 rounded-full hover:bg-gray-300"
-                >
-                  +
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={() => {
-                  addToCart(productForCart, 1);
-                  showAlert("Item added to cart");
-                }}
-                className={`flex justify-center gap-2 bg-gradient-to-r from-red-500 to-red-500 text-white px-8 py-2 rounded-full hover:opacity-90 transition
-                ${view === "list" ? "mt-2" : ""}`}
-              >
-                Add To Cart
-              </button>
-            )}
-          </div>
+          {/* Add to Cart + View Product Buttons */}
+<div className="flex flex-wrap gap-3 mt-4">
+  {cartItem ? (
+    <div className="flex items-center gap-2 border rounded-full px-6 py-1 bg-gray-50">
+      <button
+        onClick={() => decreaseQuantity(cartItem.id, 1)}
+        className="bg-gray-200 px-2 py-1 rounded-full hover:bg-gray-300"
+      >
+        -
+      </button>
+      <span className="font-medium">{cartItem.quantity}</span>
+      <button
+        onClick={() => increaseQuantity(cartItem.id, 1)}
+        className="bg-gray-200 px-2 py-1 rounded-full hover:bg-gray-300"
+      >
+        +
+      </button>
+    </div>
+  ) : (
+    <button
+      onClick={() => {
+        addToCart(productForCart, 1);
+        showAlert("Item added to cart");
+      }}
+      className={`flex justify-center gap-2 bg-gradient-to-r from-red-500 to-red-500 text-white px-3 py-2 rounded-full hover:opacity-90 transition
+      ${view === "list" ? "mt-2" : ""}`}
+    >
+      Add To Cart
+    </button>
+  )}
+
+  {/* View Product Button */}
+  <Link
+    href={`/products/${product.slug}`}
+    className="flex justify-center items-center gap-2 border border-gray-300 text-gray-700 px-3 py-2 rounded-full hover:bg-gray-100 transition"
+  >
+    View Product
+  </Link>
+</div>
+
+
+          
         </div>
       </div>
     </>
