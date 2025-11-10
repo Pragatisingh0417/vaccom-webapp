@@ -126,16 +126,7 @@ export default function AccountPage() {
   const SIDEBAR_ITEMS = [
     { label: "Profile", key: "profile", icon: <FaRegUser /> },
     
-    {
-      label: "Logout",
-      key: "logout",
-      icon: <FaSignOutAlt />,
-      action: () => {
-        localStorage.removeItem("token");
-        setUser(null);
-        router.push("/login");
-      },
-    },
+  
   ];
 
   const handleEditClick = () => {
@@ -170,11 +161,11 @@ export default function AccountPage() {
           <section>
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                <FaRegUser className="text-blue-600" /> Profile Info
+                <FaRegUser className="text-red-600" /> Profile Info
               </h2>
               <button
                 onClick={handleEditClick}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
               >
                 <FiEdit /> Edit
               </button>
@@ -190,12 +181,7 @@ export default function AccountPage() {
               <p>
                 <strong>Phone:</strong> {user?.phone}
               </p>
-              <p>
-                <strong>Address:</strong>{" "}
-                {addresses[0]
-                  ? `${addresses[0].line1}, ${addresses[0].city}`
-                  : "No address added"}
-              </p>
+              
             </div>
           </section>
         )}
@@ -203,7 +189,7 @@ export default function AccountPage() {
         {selectedTab === "orders" && (
           <section>
             <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-              <FaBoxOpen className="text-blue-600" /> My Orders
+              <FaBoxOpen className="text-red-600" /> My Orders
             </h2>
             {orders.length === 0 ? (
               <p>No orders found.</p>
@@ -259,7 +245,7 @@ export default function AccountPage() {
                       className="w-full h-40 object-cover rounded mb-2"
                     />
                     <h3 className="font-semibold">{item.name}</h3>
-                    <p className="text-blue-600 font-bold">${item.price}</p>
+                    <p className="text-red-600 font-bold">${item.price}</p>
                   </div>
                 ))}
               </div>
@@ -298,7 +284,7 @@ export default function AccountPage() {
         {selectedTab === "notifications" && (
           <section>
             <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-              <FaBell className="text-blue-600" /> Notifications
+              <FaBell className="text-red-600" /> Notifications
             </h2>
             {notifications.length === 0 ? (
               <p>No notifications found.</p>
@@ -308,7 +294,7 @@ export default function AccountPage() {
                   <div
                     key={n._id}
                     className={`p-4 border rounded-lg ${
-                      n.isRead ? "bg-gray-50" : "bg-blue-50"
+                      n.isRead ? "bg-gray-50" : "bg-red-50"
                     }`}
                   >
                     <h3 className="font-semibold">{n.title}</h3>
@@ -393,7 +379,7 @@ export default function AccountPage() {
               </button>
               <button
                 onClick={handleSave}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
               >
                 Save
               </button>

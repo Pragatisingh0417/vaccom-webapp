@@ -1,4 +1,5 @@
 "use client";
+
 import { useRouter, usePathname } from "next/navigation";
 import {
   FaRegUser,
@@ -10,11 +11,13 @@ import {
   FaCog,
   FaSignOutAlt,
 } from "react-icons/fa";
-import { ReactNode } from "react";
+import { ReactNode, useContext } from "react";
+import { UserContext } from "@/context/UserContext";
 
 export default function AccountLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
+  const { user, setUser } = useContext(UserContext);
 
   const MENU = [
     { label: "Profile", path: "/account", icon: <FaRegUser /> },
@@ -23,21 +26,31 @@ export default function AccountLayout({ children }: { children: ReactNode }) {
     { label: "Coupons", path: "/account/coupon", icon: <FaGift /> },
     { label: "Notifications", path: "/account/notifications", icon: <FaBell /> },
     { label: "Addresses", path: "/account/addresses", icon: <FaMapMarkerAlt /> },
-    { label: "Settings", path: "/account/settings", icon: <FaCog /> },
   ];
+
+  
+  
 
   return (
     <div className="min-h-screen flex bg-gray-50">
       {/* Sidebar */}
       <aside className="w-64 bg-white border-r flex flex-col">
         <div className="py-8 px-6 border-b flex flex-col items-center">
-          <div className="bg-blue-600 text-white rounded-full w-16 h-16 flex items-center justify-center text-2xl font-bold mb-2">
-            P
+          {/* User Initial */}
+          <div className="bg-red-600 text-white rounded-full w-16 h-16 flex items-center justify-center text-2xl font-bold mb-2">
+            {user?.name ? user.name.charAt(0).toUpperCase() : "?"}
           </div>
-          <div className="mt-1 font-semibold text-gray-800">Pragati Singh</div>
-          <div className="text-xs text-gray-500">pragati@gmail.com</div>
+
+          {/* Name + Email */}
+          <div className="mt-1 font-semibold text-gray-800">
+            {user?.name || "Loading..."}
+          </div>
+          <div className="text-xs text-gray-500">
+            {user?.email || "No email"}
+          </div>
         </div>
 
+        {/* Sidebar Navigation */}
         <nav className="flex-1 px-2 pt-6">
           {MENU.map((item) => (
             <button
@@ -46,7 +59,7 @@ export default function AccountLayout({ children }: { children: ReactNode }) {
               className={`flex items-center w-full px-4 py-3 text-left rounded-lg gap-3 mb-2 transition
                 ${
                   pathname === item.path
-                    ? "bg-blue-50 text-blue-700 font-bold"
+                    ? "bg-red-50 text-red-700 font-bold"
                     : "hover:bg-gray-100 text-gray-700"
                 }`}
             >
@@ -55,16 +68,9 @@ export default function AccountLayout({ children }: { children: ReactNode }) {
             </button>
           ))}
 
-          {/* Logout */}
-          <button
-            onClick={() => {
-              localStorage.removeItem("token");
-              router.push("/login");
-            }}
-            className="flex items-center w-full px-4 py-3 text-left rounded-lg gap-3 mt-4 hover:bg-red-50 text-red-600"
-          >
-            <FaSignOutAlt /> Logout
-          </button>
+
+          
+          
         </nav>
       </aside>
 

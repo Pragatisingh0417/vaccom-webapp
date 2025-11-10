@@ -1,22 +1,16 @@
-import mongoose from "mongoose";
+import mongoose, { Schema, models } from "mongoose";
 
-const AddressSchema = new mongoose.Schema(
+const AddressSchema = new Schema(
   {
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-    fullName: { type: String, required: true },
-    phone: { type: String, required: true },
-    street: { type: String, required: true },
+    userEmail: { type: String, required: true },
+    line1: { type: String, required: true },
     city: { type: String, required: true },
     state: { type: String, required: true },
-    postalCode: { type: String, required: true },
+    zip: { type: String, required: true },
     country: { type: String, required: true },
-    isDefault: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
 
-export default mongoose.models.Address || mongoose.model("Address", AddressSchema);
+const Address = models.Address || mongoose.model("Address", AddressSchema);
+export default Address;

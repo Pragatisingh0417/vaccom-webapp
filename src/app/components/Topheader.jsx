@@ -168,7 +168,7 @@ export default function ContactHeader() {
                       Welcome, <b>{user.name}</b> 👋
                     </span>
                     <p className="text-sm text-gray-500">Manage your account</p>
-                    <Link href="/profile" className="block px-4 py-2 hover:bg-gray-100">
+                    <Link href="/account" className="block px-4 py-2 hover:bg-gray-100">
                       Your Profile
                     </Link>
                     <Link href="/orders" className="block px-4 py-2 hover:bg-gray-100">
