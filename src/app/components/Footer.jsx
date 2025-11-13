@@ -79,28 +79,31 @@ export default function Footer() {
           <h2 className="text-2xl font-semibold mb-4">Quick Links</h2>
           <ul className="space-y-2 text-gray-300 text-[15px]">
             <li>
-              <Link href="/faq" className="hover:text-red-500 transition">Home</Link>
+              <Link href="/" className="hover:text-red-500 transition">Home</Link>
             </li>
             <li>
-              <Link href="/returns" className="hover:text-red-500 transition">About Us</Link>
+              <Link href="/about-us" className="hover:text-red-500 transition">About Us</Link>
             </li>
             <li>
-              <Link href="/shipping" className="hover:text-red-500 transition">Repair and Services</Link>
+              <Link href="/repair-and-services" className="hover:text-red-500 transition">Repair and Services</Link>
             </li>
             <li>
-              <Link href="/warranty" className="hover:text-red-500 transition">Today’s Deals</Link>
-            </li>
-             <li>
-              <Link href="/warranty" className="hover:text-red-500 transition">
-Contact Us</Link>
-            </li>
-             <li>
-              <Link href="/warranty" className="hover:text-red-500 transition">Privacy Policy</Link>
-            </li>
-             <li>
-              <Link href="/warranty" className="hover:text-red-500 transition">Shipping & Returns</Link>
+              <Link href="/product-category/today-deals" className="hover:text-red-500 transition">Today’s Deals</Link>
             </li>
              
+             <li>
+              <Link href="/privacy-policy" className="hover:text-red-500 transition">Privacy Policy</Link>
+            </li>
+             <li>
+              <Link href="/refund_returns" className="hover:text-red-500 transition">Refund & Returns</Link>
+            </li>
+            <li>
+              <Link href="/terms-of-service" className="hover:text-red-500 transition">Terms of service</Link>
+            </li>
+             <li>
+              <Link href="/contact-us" className="hover:text-red-500 transition">
+Contact Us</Link>
+            </li>
           </ul>
         </div>
 
